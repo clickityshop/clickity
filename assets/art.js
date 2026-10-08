@@ -54,6 +54,23 @@
         <circle cx="168" cy="96" r="24"/>
         <circle cx="176" cy="90" r="4" fill="#1b1b1b"/>
       </g>`,
+    keys: (c) => `
+      <g stroke="#1b1b1b" stroke-width="4" stroke-linejoin="round">
+        <rect x="26" y="72" width="148" height="86" rx="18" fill="${c}"/>
+        <rect x="44" y="52" width="50" height="62" rx="10" fill="#fff"/>
+        <rect x="106" y="52" width="50" height="62" rx="10" fill="#fff"/>
+        <rect x="52" y="58" width="34" height="38" rx="6" fill="none" opacity=".5"/>
+        <rect x="114" y="58" width="34" height="38" rx="6" fill="none" opacity=".5"/>
+        <circle cx="100" cy="138" r="5" fill="#1b1b1b"/>
+      </g>`,
+    slider: (c) => `
+      <g stroke="#1b1b1b" stroke-width="4" stroke-linejoin="round">
+        <rect x="22" y="70" width="156" height="60" rx="30" fill="${c}"/>
+        <rect x="40" y="88" width="120" height="24" rx="12" fill="#f6efe2"/>
+        <circle cx="126" cy="100" r="20" fill="#fff"/>
+        <circle cx="120" cy="94" r="5" fill="#fff" stroke="none" opacity=".9"/>
+        <path d="M60 100 h28 M80 92 l8 8 l-8 8" fill="none" stroke-linecap="round"/>
+      </g>`,
     pop: (c) => `
       <g stroke="#1b1b1b" stroke-width="4">
         <circle cx="100" cy="100" r="66" fill="${c}"/>

@@ -24,10 +24,10 @@
     renderCount();
   }
 
-  function add(id, color) {
+  function add(id, color, qty) {
     const line = cart.find((l) => l.id === id && l.color === color);
-    if (line) line.qty = Math.min(CFG.maxPerItem, line.qty + 1);
-    else cart.push({ id, color, qty: 1 });
+    if (line) line.qty = Math.min(CFG.maxPerItem, line.qty + qty);
+    else cart.push({ id, color, qty });
     save();
     const badge = $("cartCount");
     badge.classList.remove("bump");
@@ -57,11 +57,14 @@
         <div class="body">
           <h3>${esc(p.name)} <span class="price">${money(p.price)}</span></h3>
           <p>${esc(p.blurb)}</p>
-          ${p.colors.length > 1 ? `
-            <div class="swatches" role="group" aria-label="Color">
-              ${p.colors.map((c, i) => `<button class="swatch" style="background:${Art.colorFor(c)}" data-color="${esc(c)}" aria-pressed="${i === 0}" title="${esc(c)}" aria-label="${esc(c)}"></button>`).join("")}
-            </div>` : ""}
-          <span class="color-name">${esc(p.colors[0])}</span>
+          <div class="fields">
+            <label>Color
+              <select class="color">${p.colors.map((c) => `<option>${esc(c)}</option>`).join("")}</select>
+            </label>
+            <label>Qty
+              <input class="qty-in" type="number" min="1" max="${CFG.maxPerItem}" value="1" inputmode="numeric">
+            </label>
+          </div>
           ${p.soldOut ? `<span class="soldout">Sold out — check back soon</span>` : `<button class="btn lime add">Add to cart</button>`}
         </div>
       </article>`).join("");
@@ -71,19 +74,21 @@
     const card = e.target.closest(".card");
     if (!card) return;
     const p = byId(card.dataset.id);
-    const sw = e.target.closest(".swatch");
-    if (sw) {
-      card.querySelectorAll(".swatch").forEach((b) => b.setAttribute("aria-pressed", b === sw));
-      card.querySelector(".color-name").textContent = sw.dataset.color;
-      if (!p.photo) card.querySelector(".pic").innerHTML = picture(p, sw.dataset.color);
-      return;
-    }
-    if (e.target.closest(".add")) {
-      add(p.id, card.querySelector(".color-name").textContent);
-      const btn = e.target.closest(".add");
-      btn.textContent = "Added!";
-      setTimeout(() => (btn.textContent = "Add to cart"), 900);
-    }
+    const btn = e.target.closest(".add");
+    if (!btn) return;
+    const qtyIn = card.querySelector(".qty-in");
+    const qty = Math.max(1, Math.min(CFG.maxPerItem, parseInt(qtyIn.value, 10) || 1));
+    add(p.id, card.querySelector(".color").value, qty);
+    qtyIn.value = 1;
+    btn.textContent = qty > 1 ? `Added ${qty}!` : "Added!";
+    setTimeout(() => (btn.textContent = "Add to cart"), 900);
+  });
+
+  $("grid").addEventListener("change", (e) => {
+    if (!e.target.matches(".color")) return;
+    const card = e.target.closest(".card");
+    const p = byId(card.dataset.id);
+    if (!p.photo) card.querySelector(".pic").innerHTML = picture(p, e.target.value);
   });
 
   // ---------- Drawer: cart → checkout → done ----------
@@ -141,17 +146,13 @@
   }
 
   function renderCheckout(body) {
-    const schoolField = CFG.schools.length
-      ? `<select name="school" required><option value="">Choose…</option>${CFG.schools.map((s) => `<option>${esc(s)}</option>`).join("")}</select>`
-      : `<input name="school" required autocomplete="organization">`;
     body.innerHTML = `
       <p><strong>${itemCount()} item${itemCount() === 1 ? "" : "s"}</strong> · ${money(total())} <button class="btn small alt" id="backToCart" style="margin-left:8px">Edit cart</button></p>
       <form class="order" id="orderForm" novalidate>
         <label>Your name <input name="name" required autocomplete="name"></label>
-        <label>School ${schoolField}</label>
         <label>Grade &amp; homeroom / teacher <span class="hint">So we know where to bring it</span>
           <input name="homeroom" required placeholder="e.g. 7th — Ms. Rivera"></label>
-        <label>Email to confirm your order <span class="hint">Yours or a parent's</span>
+        <label>Email to confirm your order
           <input name="email" type="email" required autocomplete="email"></label>
         <label>Notes <span class="hint">Optional</span>
           <textarea name="notes" rows="2" placeholder="Anything we should know?"></textarea></label>
@@ -188,7 +189,6 @@
       _replyto: fd.get("email"),
       "Order #": orderId,
       Name: fd.get("name"),
-      School: fd.get("school"),
       "Grade / homeroom": fd.get("homeroom"),
       Email: fd.get("email"),
       Items: summary,

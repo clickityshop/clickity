@@ -11,7 +11,4 @@ window.CLICKITY_CONFIG = {
 
   // Shown on the order form and confirmation screen.
   pickupNote: "Pay with cash when you pick up your order at school. No money is collected online.",
-
-  // Schools you deliver to (shown as a dropdown). Leave empty to show a free-text field.
-  schools: [],
 };

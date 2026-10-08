@@ -29,6 +29,22 @@ window.CLICKITY_PRODUCTS = [
     colors: ["Orange", "Teal", "Black"],
   },
   {
+    id: "two-key-clicker",
+    name: "2-Key Keyboard Clicker",
+    blurb: "Two real clicky keyboard switches. Mash away — it's the best sound.",
+    price: 6,
+    shape: "keys",
+    colors: ["Black", "White", "Galaxy Purple", "Ocean Blue"],
+  },
+  {
+    id: "sliding-ball",
+    name: "Sliding Ball",
+    blurb: "A ball that glides back and forth in a track. Smooth and calming.",
+    price: 4,
+    shape: "slider",
+    colors: ["Teal", "Orange", "Lime", "Pastel Pink"],
+  },
+  {
     id: "gear-spinner",
     name: "Gear Spinner",
     blurb: "Three interlocking gears. Spin one, they all go.",

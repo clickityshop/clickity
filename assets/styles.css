@@ -133,6 +133,11 @@ h2.section { font-size: 2rem; letter-spacing: -0.03em; margin: 28px 0 18px; }
 .card h3 { margin: 0; font-size: 1.25rem; letter-spacing: -0.02em; display: flex; justify-content: space-between; gap: 8px; }
 .card .price { background: var(--lime); border: 2px solid var(--ink); border-radius: 8px; padding: 0 8px; font-size: 1.05rem; white-space: nowrap; }
 .card p { margin: 0; color: var(--muted); font-size: 0.95rem; flex: 1; }
+.fields { display: grid; grid-template-columns: 1fr 76px; gap: 10px; }
+.fields label { display: grid; gap: 4px; font-weight: 600; font-size: 0.85rem; }
+.fields select, .fields input {
+  font: inherit; font-size: 0.95rem; padding: 8px 10px; border: var(--line); border-radius: 12px; background: #fff; width: 100%;
+}
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
 .swatch {
   width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--ink); cursor: pointer; padding: 0;

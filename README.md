@@ -9,7 +9,6 @@ A storefront for 3D printed fidgets, made for middle schoolers. Plain static HTM
 
 1. **Order email:** set `orderEmail` in `config.js`. Orders go through [FormSubmit.co](https://formsubmit.co), which is free and needs no account. The first order sends an activation email to that address. Click the link once. FormSubmit then gives you a random alias you can use in place of your real address, so it isn't visible in the page source.
 2. **Products:** edit `products.js`. Put photos in `photos/` and set `photo: "photos/whatever.jpg"`. Products without a photo get a colored placeholder drawing.
-3. **Schools:** to show a dropdown instead of a text box, list the schools in `config.js` → `schools`.
 
 ## Hosting (GitHub Pages)
 
