@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clickity — 3D Printed Fidgets</title>
+  <meta name="description" content="Handmade 3D printed fidgets for middle schoolers. Order online, pay at pickup.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="./"><span class="dot"></span>Clickity</a>
+      <button class="btn" id="openCart" aria-label="Open cart">
+        Cart <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <h1>Fidgets that go <em>click.</em></h1>
+        <p>Handmade 3D printed fidget toys, printed one layer at a time. Pick your favorites, send your order, and pay when you pick it up at school.</p>
+        <ul class="steps">
+          <li><b>1</b> Add to cart</li>
+          <li><b>2</b> Send your order</li>
+          <li><b>3</b> Pay cash at pickup</li>
+        </ul>
+      </div>
+      <div class="hero-art" id="heroArt"></div>
+    </section>
+
+    <h2 class="section" id="shop">The lineup</h2>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <footer class="bottom">
+    <div class="wrap">
+      <span>© <span id="year"></span> Clickity · Made with a 3D printer and a lot of patience.</span>
+      <span>Find us at school events too — in-person sales welcome.</span>
+    </div>
+  </footer>
+
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="Cart" aria-hidden="true">
+    <header>
+      <h2 id="drawerTitle">Your cart</h2>
+      <button class="btn small alt" id="closeCart">Close</button>
+    </header>
+    <div class="scroll" id="drawerBody"></div>
+  </aside>
+
+  <script src="config.js"></script>
+  <script src="products.js"></script>
+  <script src="assets/art.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
