@@ -27,7 +27,7 @@ The order API needs its own Cloudflare account; GitHub Pages cannot store orders
 
    Copy the `database_id` from the command output into `wrangler.toml`, replacing the all-zero placeholder.
 
-3. In `wrangler.toml`, set `SHOP_ORIGINS` to the exact origin of the published shop (scheme and host only, with no path). The checked-in value matches the GitHub Pages address currently listed below; keep `http://localhost:8000` for local testing if wanted.
+3. In `wrangler.toml`, set `SHOP_ORIGINS` to the exact origin of the published shop (scheme and host only, with no path). The checked-in value matches the GitHub Pages address currently listed below; keep `http://localhost:8000` and `http://127.0.0.1:8000` for local testing if wanted.
 
 4. Set a private dashboard password of at least 10 characters and create the database tables:
 

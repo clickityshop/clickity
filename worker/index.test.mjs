@@ -95,6 +95,13 @@ test("accepts preflight from the configured shop and rejects other origins", asy
   assert.equal(preflight.status, 204);
   assert.equal(preflight.headers.get("Access-Control-Allow-Origin"), origin);
 
+  const localhostAlias = await worker.fetch(request("/api/orders", {
+    method: "OPTIONS",
+    requestOrigin: "http://127.0.0.1:8000",
+  }), bindings);
+  assert.equal(localhostAlias.status, 204);
+  assert.equal(localhostAlias.headers.get("Access-Control-Allow-Origin"), "http://127.0.0.1:8000");
+
   const denied = await worker.fetch(request("/api/orders", { requestOrigin: "https://attacker.example" }), bindings);
   assert.equal(denied.status, 403);
   assert.equal(denied.headers.get("Access-Control-Allow-Origin"), null);
@@ -108,6 +115,7 @@ test("stores an order with server-calculated prices and deduplicates retries", a
     email: "sam@example.com",
     pickupTime: "before-school",
     pickupLocation: "by the front office",
+    acceptedTerms: true,
     notes: "",
     expectedTotalCents: 1000,
     items: [{ id: "infinity-cube", color: "Lime", qty: 2, price: 0 }],
@@ -141,6 +149,7 @@ test("rejects unknown products, invalid colors, and over-limit quantities", asyn
     email: "sam@example.com",
     pickupTime: "after-school",
     pickupLocation: "by the front office",
+    acceptedTerms: true,
     notes: "",
     expectedTotalCents: 1000,
   };
@@ -167,6 +176,7 @@ test("requires a valid customer email", async () => {
       email: "not-an-email",
       pickupTime: "after-school",
       pickupLocation: "by the front office",
+      acceptedTerms: true,
       notes: "",
       expectedTotalCents: 500,
       items: [{ id: "infinity-cube", color: "Lime", qty: 1 }],
@@ -186,6 +196,7 @@ test("rejects a stale displayed total instead of saving a mismatched order", asy
       email: "sam@example.com",
       pickupTime: "after-school",
       pickupLocation: "by the front office",
+      acceptedTerms: true,
       notes: "",
       expectedTotalCents: 300,
       items: [{ id: "infinity-cube", color: "Lime", qty: 1 }],
@@ -205,6 +216,7 @@ test("requires the dashboard password and lets the owner mark pickup paid", asyn
       email: "sam@example.com",
       pickupTime: "after-school",
       pickupLocation: "by the front office",
+      acceptedTerms: true,
       notes: "",
       expectedTotalCents: 800,
       items: [{ id: "flexi-dragon", color: "Red", qty: 1 }],
@@ -240,6 +252,7 @@ test("rejects an invalid pickup time or missing pickup place", async () => {
     email: "sam@example.com",
     pickupTime: "during-class",
     pickupLocation: "by the front office",
+    acceptedTerms: true,
     notes: "",
     expectedTotalCents: 500,
     items: [{ id: "infinity-cube", color: "Lime", qty: 1 }],
@@ -251,6 +264,26 @@ test("rejects an invalid pickup time or missing pickup place", async () => {
     const response = await worker.fetch(request("/api/orders", { method: "POST", body: order }), bindings);
     assert.equal(response.status, 400);
   }
+  assert.equal(bindings.DB.orders.length, 0);
+});
+
+test("requires explicit agreement to site and order terms", async () => {
+  const bindings = env();
+  const response = await worker.fetch(request("/api/orders", {
+    method: "POST",
+    body: {
+      submissionId: "88888888-8888-4888-8888-888888888888",
+      name: "Sam",
+      email: "sam@example.com",
+      pickupTime: "before-school",
+      pickupLocation: "by the front office",
+      acceptedTerms: false,
+      notes: "",
+      expectedTotalCents: 500,
+      items: [{ id: "infinity-cube", color: "Lime", qty: 1 }],
+    },
+  }), bindings);
+  assert.equal(response.status, 400);
   assert.equal(bindings.DB.orders.length, 0);
 });
 

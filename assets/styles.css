@@ -231,9 +231,11 @@ body.cart-open .drawer { transform: none; }
 
 form.order { display: grid; gap: 12px; }
 form.order label { display: grid; gap: 4px; font-weight: 600; font-size: 0.95rem; }
-form.order input, form.order select, form.order textarea {
+form.order input:not([type="checkbox"]), form.order select, form.order textarea {
   font: inherit; padding: 10px 12px; border: var(--line); border-radius: 12px; background: #fff;
 }
+form.order .terms-accept { display: flex; align-items: flex-start; gap: 8px; }
+form.order .terms-accept input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--orange); flex: 0 0 auto; }
 form.order .hint { font-weight: 400; color: var(--muted); font-size: 0.85rem; }
 .note { background: #fff; border: 2px dashed var(--ink); border-radius: 12px; padding: 10px 12px; font-size: 0.92rem; }
 .hp { position: absolute; left: -9999px; }

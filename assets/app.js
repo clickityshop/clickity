@@ -165,6 +165,10 @@
         </label>
         <label>Notes <span class="hint">Optional</span>
           <textarea name="notes" rows="2" placeholder="Anything we should know?"></textarea></label>
+        <label class="terms-accept">
+          <input name="acceptedTerms" type="checkbox" required>
+          I agree to the <a href="privacy.html#terms" target="_blank" rel="noopener">site and order terms</a>.
+        </label>
         <input class="hp" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
         <p class="note">${esc(CFG.orderApiUrl
           ? `${CFG.pickupNote} Your name, email, pickup time and place, and any note are shared with Clickity to prepare your order.`
@@ -206,6 +210,7 @@
           email: fd.get("email"),
           pickupTime: fd.get("pickupTime"),
           pickupLocation: fd.get("pickupLocation"),
+          acceptedTerms: fd.get("acceptedTerms") === "on",
           notes: fd.get("notes") || "",
           expectedTotalCents: Math.round(orderTotal * 100),
           items: cart.map(({ id, color, qty }) => ({ id, color, qty })),

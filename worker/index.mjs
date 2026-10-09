@@ -19,10 +19,37 @@ function response(body, status, origin) {
   return new Response(body === null ? null : JSON.stringify(body), { status, headers });
 }
 
+function isLocalhostAlias(hostnameA, hostnameB) {
+  const normalizeLocalhost = (hostname) => {
+    if (!hostname) return "";
+    const trimmed = hostname.replace(/^\[|\]$/g, "");
+    if (trimmed === "localhost") return "localhost";
+    if (trimmed === "127.0.0.1" || trimmed === "::1") return "localhost";
+    return trimmed;
+  };
+  return normalizeLocalhost(hostnameA) === normalizeLocalhost(hostnameB);
+}
+
 function allowedOrigin(request, env) {
   const origin = request.headers.get("Origin");
+  if (!origin) return null;
+
   const origins = (env.SHOP_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean);
-  return origin && origins.includes(origin) ? origin : null;
+  const requestUrl = new URL(origin);
+
+  for (const configuredOrigin of origins) {
+    try {
+      const configuredUrl = new URL(configuredOrigin);
+      const sameOrigin = configuredUrl.origin === requestUrl.origin;
+      const sameLocalPort = configuredUrl.protocol === requestUrl.protocol && configuredUrl.port === requestUrl.port;
+      const sameLocalHost = isLocalhostAlias(configuredUrl.hostname, requestUrl.hostname) && sameLocalPort;
+      if (sameOrigin || sameLocalHost) return origin;
+    } catch {
+      // Ignore malformed configured origins.
+    }
+  }
+
+  return null;
 }
 
 async function readJson(request, maxBytes = 16_384) {
@@ -94,8 +121,8 @@ async function createOrder(request, env, origin) {
     : null;
   const pickupLocation = cleanText(body.pickupLocation, 120, true);
   const notes = cleanText(body.notes ?? "", 500);
-  if (!submissionId || !name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !pickupTime || !pickupLocation || notes === null) {
-    return response({ error: "Please check your name, email, pickup time, pickup place, and notes." }, 400, origin);
+  if (!submissionId || !name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !pickupTime || !pickupLocation || body.acceptedTerms !== true || notes === null) {
+    return response({ error: "Please check your details and agree to the site and order terms." }, 400, origin);
   }
   const existing = await env.DB.prepare(`
     SELECT id, reference, created_at, customer_name, customer_email, homeroom, pickup_time, pickup_location, notes, items_json, total_cents, status

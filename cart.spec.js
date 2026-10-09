@@ -31,11 +31,13 @@ test('cart adds products without exposing order details on the public shop', asy
   await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', 'privacy.html');
 });
 
-test('privacy policy explains order data use and does not ask visitors to keep concerns secret', async ({ page }) => {
+test('privacy policy explains order data use and limits liability clearly', async ({ page }) => {
   await page.goto('/privacy.html');
   await expect(page.getByRole('heading', { name: 'Privacy policy' })).toBeVisible();
   await expect(page.locator('main')).toContainText('preferred pickup time and place');
-  await expect(page.locator('main')).toContainText('tell a trusted adult');
+  await expect(page.locator('main')).toContainText('follow school rules');
+  await expect(page.locator('#terms')).toContainText('cash or items lost after they have been handed over');
+  await expect(page.locator('main')).toContainText('not liable');
 });
 
 test('checkout sends the customer, pickup time and place, and items to the order API', async ({ page }) => {
@@ -61,6 +63,7 @@ test('checkout sends the customer, pickup time and place, and items to the order
   await page.locator('[name="email"]').fill('sam@example.com');
   await page.locator('[name="pickupTime"]').selectOption('before-school');
   await page.locator('[name="pickupLocation"]').fill('by the front office');
+  await page.locator('[name="acceptedTerms"]').check();
   await page.getByRole('button', { name: /Place order/ }).click();
 
   await expect(page.locator('#drawerTitle')).toHaveText('Order received');
@@ -70,6 +73,7 @@ test('checkout sends the customer, pickup time and place, and items to the order
   expect(submittedOrder.email).toBe('sam@example.com');
   expect(submittedOrder.pickupTime).toBe('before-school');
   expect(submittedOrder.pickupLocation).toBe('by the front office');
+  expect(submittedOrder.acceptedTerms).toBe(true);
   expect(submittedOrder.expectedTotalCents).toBe(500);
   expect(submittedOrder.items).toEqual([{ id: 'infinity-cube', color: 'Galaxy Purple', qty: 1 }]);
 });
