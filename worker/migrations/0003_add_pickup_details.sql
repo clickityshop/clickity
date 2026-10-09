@@ -1,0 +1,2 @@
+ALTER TABLE orders ADD COLUMN pickup_time TEXT NOT NULL DEFAULT '';
+ALTER TABLE orders ADD COLUMN pickup_location TEXT NOT NULL DEFAULT '';

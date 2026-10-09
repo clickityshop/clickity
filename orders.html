@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Owner orders — Clickity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="./"><span class="dot"></span>Clickity <small class="owner-label">orders</small></a>
+      <div class="dashboard-actions">
+        <a class="btn small alt" href="./">Shop</a>
+        <button class="btn small alt" id="signOut" hidden>Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap dashboard">
+    <section class="dashboard-intro">
+      <span class="eyebrow">Your little order station</span>
+      <h1>Orders to make <em>click.</em></h1>
+      <p>See who ordered what, how much to collect at pickup, and what everyone’s into.</p>
+    </section>
+
+    <section class="dashboard-login" id="loginPanel">
+      <h2>Owner sign in</h2>
+      <p>Use the dashboard password set when the order service was deployed.</p>
+      <form id="loginForm">
+        <label for="dashboardPassword">Dashboard password</label>
+        <input id="dashboardPassword" name="password" type="password" autocomplete="current-password" minlength="10" required>
+        <p class="dashboard-message" id="loginMessage" role="alert"></p>
+        <button class="btn lime" type="submit">Show my orders</button>
+      </form>
+    </section>
+
+    <section class="dashboard-content" id="ordersPanel" hidden aria-live="polite">
+      <div class="dashboard-toolbar">
+        <h2>Recent orders</h2>
+        <div class="dashboard-refresh">
+          <span id="lastUpdated" aria-live="polite"></span>
+          <button class="btn small alt" id="refreshOrders">Refresh</button>
+        </div>
+      </div>
+      <p class="dashboard-message" id="ordersMessage" role="status"></p>
+      <div class="order-stats" id="orderStats"></div>
+      <div class="top-picks" id="topPicks"></div>
+      <ul class="dashboard-order-list" id="ordersList"></ul>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="assets/orders.js"></script>
+</body>
+</html>

@@ -18,9 +18,11 @@
   let cart = [];
   try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { cart = []; }
   cart = cart.filter((l) => byId(l.id));
+  let pendingSubmissionId = crypto.randomUUID();
 
   function save() {
     try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {}
+    pendingSubmissionId = crypto.randomUUID();
     renderCount();
   }
 
@@ -148,18 +150,27 @@
   function renderCheckout(body) {
     body.innerHTML = `
       <p><strong>${itemCount()} item${itemCount() === 1 ? "" : "s"}</strong> · ${money(total())} <button class="btn small alt" id="backToCart" style="margin-left:8px">Edit cart</button></p>
-      <form class="order" id="orderForm" novalidate>
+      <form class="order" id="orderForm">
         <label>Your name <input name="name" required autocomplete="name"></label>
-        <label>Grade &amp; homeroom / teacher <span class="hint">So we know where to bring it</span>
-          <input name="homeroom" required placeholder="e.g. 7th — Ms. Rivera"></label>
-        <label>Email to confirm your order
-          <input name="email" type="email" required autocomplete="email"></label>
+        <label>Email <input name="email" type="email" required autocomplete="email"></label>
+        <label>When should we meet?
+          <select name="pickupTime" required>
+            <option value="" selected disabled>Choose a time</option>
+            <option value="before-school">Before school</option>
+            <option value="after-school">After school</option>
+          </select>
+        </label>
+        <label>Where should we meet?
+          <input name="pickupLocation" required maxlength="120" placeholder="e.g. by the front office">
+        </label>
         <label>Notes <span class="hint">Optional</span>
           <textarea name="notes" rows="2" placeholder="Anything we should know?"></textarea></label>
         <input class="hp" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <p class="note">${esc(CFG.pickupNote)}</p>
+        <p class="note">${esc(CFG.orderApiUrl
+          ? `${CFG.pickupNote} Your name, email, pickup time and place, and any note are shared with Clickity to prepare your order.`
+          : "Online orders are not connected yet. Please check back soon.")}</p>
         <p class="error" id="formError" role="alert"></p>
-        <button class="btn" type="submit" id="submitOrder" style="justify-content:center">Send order (${money(total())})</button>
+        <button class="btn" type="submit" id="submitOrder" style="justify-content:center" ${CFG.orderApiUrl ? "" : "disabled"}>Place order (${money(total())})</button>
       </form>`;
     $("backToCart").onclick = () => { view = "cart"; renderCart(); };
     $("orderForm").addEventListener("submit", submitOrder);
@@ -170,70 +181,65 @@
     const form = e.target;
     const err = $("formError");
     if (!form.checkValidity()) {
-      err.textContent = "Please fill in every required field (and check your email address).";
+      err.textContent = "Please fill in your name, a valid email, and your pickup time and place.";
       form.reportValidity();
       return;
     }
     if (form._honey.value) return; // bot
 
-    const orderId = "CK-" + Date.now().toString(36).toUpperCase().slice(-6);
-    const summary = cart.map((l) => {
-      const p = byId(l.id);
-      return `${l.qty} × ${p.name} (${l.color}) @ ${money(p.price)} = ${money(l.qty * p.price)}`;
-    }).join("\n");
     const fd = new FormData(form);
-
-    const payload = {
-      _subject: `Clickity order ${orderId} — ${fd.get("name")} (${money(total())})`,
-      _template: "table",
-      _replyto: fd.get("email"),
-      "Order #": orderId,
-      Name: fd.get("name"),
-      "Grade / homeroom": fd.get("homeroom"),
-      Email: fd.get("email"),
-      Items: summary,
-      "Item count": itemCount(),
-      "Total due at pickup": money(total()),
-      Notes: fd.get("notes") || "—",
-    };
+    const orderTotal = total();
 
     const btn = $("submitOrder");
     btn.disabled = true;
-    btn.textContent = "Sending…";
+    btn.textContent = "Placing order…";
     err.textContent = "";
 
     try {
-      if (!CFG.orderEmail || CFG.orderEmail === "YOUR_EMAIL_HERE") throw new Error("Order email isn't set up yet (config.js).");
-      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(CFG.orderEmail)}`, {
+      if (!CFG.orderApiUrl) throw new Error("Orders are not connected yet. Please contact Clickity before submitting.");
+      const response = await fetch(`${CFG.orderApiUrl.replace(/\/+$/, "")}/api/orders`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          submissionId: pendingSubmissionId,
+          name: fd.get("name"),
+          email: fd.get("email"),
+          pickupTime: fd.get("pickupTime"),
+          pickupLocation: fd.get("pickupLocation"),
+          notes: fd.get("notes") || "",
+          expectedTotalCents: Math.round(orderTotal * 100),
+          items: cart.map(({ id, color, qty }) => ({ id, color, qty })),
+        }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.success === false || data.success === "false") throw new Error(data.message || "The order didn't go through.");
-      const totalText = money(total());
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Your order could not be placed. Please try again.");
       cart = [];
       save();
-      $("drawerTitle").textContent = "Order sent!";
+      $("drawerTitle").textContent = "Order received";
       $("drawerBody").innerHTML = `
         <div class="done">
-          <div class="big">🎉</div>
+          <div class="big" aria-hidden="true">📦</div>
           <h3>Thanks, ${esc(fd.get("name"))}!</h3>
-          <p>Your order number is <code>${orderId}</code></p>
-          <p>Bring <strong>${totalText}</strong> in cash when you pick it up. We'll reach out to <strong>${esc(fd.get("email"))}</strong> when it's ready.</p>
+          <p>Order <strong><code>${esc(result.order.reference)}</code></strong> is ready for Clickity. Bring <strong>${money(result.order.totalCents / 100)}</strong> in cash at pickup.</p>
           <button class="btn lime" id="doneBtn">Back to the shop</button>
         </div>`;
       $("doneBtn").onclick = closeCart;
     } catch (ex) {
-      err.textContent = ex.message + " Please try again, or tell us in person.";
+      err.textContent = ex.message || "Your order could not be placed. Please try again.";
       btn.disabled = false;
-      btn.textContent = `Send order (${money(total())})`;
+      btn.textContent = `Place order (${money(orderTotal)})`;
     }
   }
 
   // ---------- Init ----------
   $("heroArt").innerHTML = PRODUCTS.slice(0, 3).map((p) => `<div class="tile">${picture(p, p.colors[0])}</div>`).join("");
   $("year").textContent = new Date().getFullYear();
+  const contactEmail = CFG.contactEmail || "hello@example.com";
+  const contactLink = $("contactEmail");
+  if (contactLink) {
+    contactLink.href = `mailto:${contactEmail}`;
+    contactLink.textContent = contactEmail;
+  }
   renderGrid();
   renderCount();
 })();

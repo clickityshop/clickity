@@ -3,7 +3,7 @@
 //  - photo:  optional, e.g. "photos/dragon.jpg" — if missing, a colored placeholder is drawn
 //  - colors: filament colors the buyer can pick from (first one is the default)
 //  - soldOut: true hides the Add button
-window.CLICKITY_PRODUCTS = [
+const CLICKITY_PRODUCTS = [
   {
     id: "infinity-cube",
     name: "Infinity Cube",
@@ -69,3 +69,6 @@ window.CLICKITY_PRODUCTS = [
     colors: ["Sunset", "Sky", "White"],
   },
 ];
+
+if (typeof window !== "undefined") window.CLICKITY_PRODUCTS = CLICKITY_PRODUCTS;
+if (typeof module !== "undefined") module.exports = CLICKITY_PRODUCTS;

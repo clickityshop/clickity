@@ -1,0 +1,24 @@
+{
+  "name": "clickity",
+  "version": "1.0.0",
+  "description": "A storefront for 3D printed fidgets, made for middle schoolers. Plain static HTML/CSS/JS: no build step, no server, no Node.",
+  "main": "cart.spec.js",
+  "scripts": {
+    "test": "node --test worker/index.test.mjs && playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clickityshop/clickity.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/clickityshop/clickity/issues"
+  },
+  "homepage": "https://github.com/clickityshop/clickity#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.64.0"
+  }
+}
