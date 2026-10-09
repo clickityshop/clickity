@@ -31,6 +31,31 @@ test('cart adds products without exposing order details on the public shop', asy
   await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', 'privacy.html');
 });
 
+test('product cards start with varied random colors that match their illustrations', async ({ page }) => {
+  await page.addInitScript(() => {
+    const values = [0, 0.26, 0.51, 0.76];
+    let index = 0;
+    Math.random = () => values[index++ % values.length];
+  });
+  await page.goto('/');
+
+  const cards = page.locator('.card');
+  const products = await cards.evaluateAll((elements) => elements.map((card) => ({
+    color: card.querySelector('.color').value,
+    fill: (() => {
+      const shape = card.querySelector('.pic svg g');
+      return shape.getAttribute('fill') || shape.querySelector('[fill]:not([fill="none"])')?.getAttribute('fill');
+    })(),
+  })));
+  const colors = products.map((product) => product.color);
+  expect(colors.slice(0, 4)).toEqual(['Red', 'Blue', 'Black', 'White']);
+  expect(new Set(colors.slice(0, 4)).size).toBe(4);
+  expect(products.slice(0, 4).map((product) => product.fill)).toEqual(['#ef3b36', '#1e88e5', '#111111', '#ffffff']);
+  await cards.first().locator('.add').click();
+  await page.locator('#openCart').click();
+  await expect(page.locator('#drawerBody')).toContainText(colors[0]);
+});
+
 test('privacy policy explains order data use and limits liability clearly', async ({ page }) => {
   await page.goto('/privacy.html');
   await expect(page.getByRole('heading', { name: 'Privacy policy' })).toBeVisible();
@@ -56,6 +81,7 @@ test('checkout sends the customer, pickup time and place, and items to the order
     });
   });
   await page.goto('/');
+  const selectedColor = await page.locator('.card').first().locator('.color').inputValue();
   await page.locator('.add').first().click();
   await page.locator('#openCart').click();
   await page.getByRole('button', { name: 'Checkout' }).click();
@@ -75,7 +101,7 @@ test('checkout sends the customer, pickup time and place, and items to the order
   expect(submittedOrder.pickupLocation).toBe('by the front office');
   expect(submittedOrder.acceptedTerms).toBe(true);
   expect(submittedOrder.expectedTotalCents).toBe(500);
-  expect(submittedOrder.items).toEqual([{ id: 'infinity-cube', color: 'Galaxy Purple', qty: 1 }]);
+  expect(submittedOrder.items).toEqual([{ id: 'infinity-cube', color: selectedColor, qty: 1 }]);
 });
 
 test('owner dashboard shows who, what, and cash due, then tracks pickup', async ({ page }) => {
@@ -89,7 +115,7 @@ test('owner dashboard shows who, what, and cash due, then tracks pickup', async 
     pickupTime: 'after-school',
     pickupLocation: 'by the front office',
     notes: '',
-    items: [{ id: 'infinity-cube', name: 'Infinity Cube', color: 'Lime', qty: 2, unitPriceCents: 500 }],
+    items: [{ id: 'infinity-cube', name: 'Infinity Cube', color: 'Red', qty: 2, unitPriceCents: 500 }],
     totalCents: 1000,
     status: 'pending',
   };

@@ -19,21 +19,21 @@
       transition: transform .06s, box-shadow .06s; position: relative;
     }
     .tap:active { transform: translate(5px,5px); box-shadow: none; }
-    .tap svg, .tap img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #f6efe2; border-radius: 12px; }
+    .tap svg, .tap img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border-radius: 12px; }
     .tap strong { font-size: 1.05rem; }
     .tap .n { position: absolute; top: 6px; right: 6px; background: var(--ink); color: #fff; border-radius: 999px; min-width: 28px; height: 28px; display: grid; place-items: center; font-weight: 800; }
     .panel { background: #fff; border: var(--line); border-radius: var(--radius); box-shadow: var(--press); padding: 16px; position: sticky; top: 88px; align-self: start; display: grid; gap: 12px; }
     .panel h2 { margin: 0; }
     .sale-lines { min-height: 60px; }
-    .sale-lines div { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 2px dashed #e5d9c4; }
-    .sale-lines button { border: 0; background: none; font: inherit; color: #b3261e; cursor: pointer; font-weight: 700; }
+    .sale-lines div { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 2px dashed #111; }
+    .sale-lines button { border: 0; background: none; font: inherit; color: var(--red); cursor: pointer; font-weight: 700; }
     .big-total { font-size: 2.6rem; font-weight: 800; letter-spacing: -.03em; }
     .cash { display: flex; gap: 8px; flex-wrap: wrap; }
     .change { font-size: 1.2rem; font-weight: 700; }
     .stats { display: flex; gap: 10px; flex-wrap: wrap; }
-    .stats span { border: 2px solid var(--ink); border-radius: 999px; padding: 4px 12px; background: var(--lime); font-weight: 700; }
+    .stats span { border: 2px solid var(--ink); border-radius: 999px; padding: 4px 12px; background: var(--blue); color: #fff; font-weight: 700; }
     table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-    td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid #e5d9c4; vertical-align: top; }
+    td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid #111; vertical-align: top; }
     details { background: #fff; border: var(--line); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 40px; }
     summary { font-weight: 700; cursor: pointer; }
     @media (max-width: 820px) { .booth { grid-template-columns: 1fr; } .panel { position: static; } }
@@ -63,7 +63,7 @@
           <div class="cash" id="cashBtns"></div>
           <div class="change" id="change"></div>
         </div>
-        <button class="btn lime" id="complete" style="justify-content:center">Complete sale</button>
+        <button class="btn blue" id="complete" style="justify-content:center">Complete sale</button>
         <button class="btn small alt" id="clearSale" style="justify-content:center">Clear</button>
       </aside>
     </div>

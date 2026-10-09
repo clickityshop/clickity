@@ -50,7 +50,7 @@ The dashboard's data API requires the password and only accepts browser requests
 
 ## Products
 
-Edit `products.js` to add or change products, prices, and colors. The same catalog is used by the shop and Worker, so the server checks item IDs, colors, quantities, and prices before saving an order. Put photos in `photos/` and set `photo: "photos/whatever.jpg"`. Products without a photo use a colored placeholder drawing.
+Edit `products.js` to add or change products, prices, and colors. The shop randomly picks one available color for each product whenever the page opens; customers can change it before adding the item to their cart. The same catalog is used by the shop and Worker, so the server checks item IDs, colors, quantities, and prices before saving an order. Put photos in `photos/` and set `photo: "photos/whatever.jpg"`. Products without a photo use a colored placeholder drawing.
 
 ## Hosting (GitHub Pages)
 

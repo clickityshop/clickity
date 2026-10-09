@@ -1,7 +1,7 @@
 // Product catalog. Add, remove, or edit items here.
 //  - id:     unique, no spaces (used in the cart)
 //  - photo:  optional, e.g. "photos/dragon.jpg" — if missing, a colored placeholder is drawn
-//  - colors: filament colors the buyer can pick from (first one is the default)
+//  - colors: available filament colors; one is picked randomly on each page opening
 //  - soldOut: true hides the Add button
 const CLICKITY_PRODUCTS = [
   {
@@ -10,7 +10,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Folds over and over forever. Silent enough for class.",
     price: 5,
     shape: "cube",
-    colors: ["Black", "White", "Red"],
+    colors: ["Red", "Blue", "Black", "White"],
   },
   {
     id: "flexi-dragon",
@@ -18,7 +18,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Fully articulated, printed in one piece. Wiggles like it's alive.",
     price: 8,
     shape: "dragon",
-    colors: ["Black", "White", "Red"],
+    colors: ["Red", "Blue", "Black", "White"],
   },
   {
     id: "clicker-key",
@@ -26,7 +26,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "That satisfying click — clips to your backpack.",
     price: 3,
     shape: "clicker",
-    colors: ["Black", "White", "Red"],
+    colors: ["Red", "Blue", "Black", "White"],
   },
   {
     id: "two-key-clicker",
@@ -34,7 +34,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Two real clicky keyboard switches. Mash away — it's the best sound.",
     price: 6,
     shape: "keys",
-    colors: ["Black", "White", "Red"],
+    colors: ["Red", "Blue", "Black", "White"],
   },
   {
     id: "sliding-ball",
@@ -42,7 +42,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "A ball that glides back and forth in a track. Smooth and calming.",
     price: 4,
     shape: "slider",
-    colors: ["Black", "White", "Red"],
+    colors: ["Red", "Blue", "Black", "White"],
   },
   {
     id: "gear-spinner",
@@ -50,7 +50,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Three interlocking gears. Spin one, they all go.",
     price: 6,
     shape: "gear",
-    colors: ["Black", "White", "Red"],
+    colors: ["Red", "Blue", "Black", "White"],
   },
   {
     id: "fidget-slug",
@@ -58,7 +58,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Segmented, squishy-feeling, and weirdly cute.",
     price: 4,
     shape: "slug",
-    colors: ["Black", "White", "Red"],
+    colors: ["Red", "Blue", "Black", "White"],
   },
   {
     id: "push-pop",
@@ -66,7 +66,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Click-in buttons on a pocket-sized coin.",
     price: 3,
     shape: "pop",
-    colors: ["Black", "White", "Red"],
+    colors: ["Red", "Blue", "Black", "White"],
   },
 ];
 

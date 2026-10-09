@@ -118,7 +118,7 @@ test("stores an order with server-calculated prices and deduplicates retries", a
     acceptedTerms: true,
     notes: "",
     expectedTotalCents: 1000,
-    items: [{ id: "infinity-cube", color: "Lime", qty: 2, price: 0 }],
+    items: [{ id: "infinity-cube", color: "Red", qty: 2, price: 0 }],
   };
 
   const first = await worker.fetch(request("/api/orders", { method: "POST", body: order }), bindings);
@@ -154,9 +154,9 @@ test("rejects unknown products, invalid colors, and over-limit quantities", asyn
     expectedTotalCents: 1000,
   };
   for (const item of [
-    { id: "not-a-product", color: "Lime", qty: 1 },
+    { id: "not-a-product", color: "Red", qty: 1 },
     { id: "infinity-cube", color: "Invisible", qty: 1 },
-    { id: "infinity-cube", color: "Lime", qty: 11 },
+    { id: "infinity-cube", color: "Red", qty: 11 },
   ]) {
     const response = await worker.fetch(request("/api/orders", {
       method: "POST",
@@ -179,7 +179,7 @@ test("requires a valid customer email", async () => {
       acceptedTerms: true,
       notes: "",
       expectedTotalCents: 500,
-      items: [{ id: "infinity-cube", color: "Lime", qty: 1 }],
+      items: [{ id: "infinity-cube", color: "Red", qty: 1 }],
     },
   }), bindings);
   assert.equal(response.status, 400);
@@ -199,7 +199,7 @@ test("rejects a stale displayed total instead of saving a mismatched order", asy
       acceptedTerms: true,
       notes: "",
       expectedTotalCents: 300,
-      items: [{ id: "infinity-cube", color: "Lime", qty: 1 }],
+      items: [{ id: "infinity-cube", color: "Red", qty: 1 }],
     },
   }), bindings);
   assert.equal(response.status, 409);
@@ -255,7 +255,7 @@ test("rejects an invalid pickup time or missing pickup place", async () => {
     acceptedTerms: true,
     notes: "",
     expectedTotalCents: 500,
-    items: [{ id: "infinity-cube", color: "Lime", qty: 1 }],
+    items: [{ id: "infinity-cube", color: "Red", qty: 1 }],
   };
   for (const order of [
     base,
@@ -280,7 +280,7 @@ test("requires explicit agreement to site and order terms", async () => {
       acceptedTerms: false,
       notes: "",
       expectedTotalCents: 500,
-      items: [{ id: "infinity-cube", color: "Lime", qty: 1 }],
+      items: [{ id: "infinity-cube", color: "Red", qty: 1 }],
     },
   }), bindings);
   assert.equal(response.status, 400);

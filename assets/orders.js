@@ -90,7 +90,7 @@
           <ul class="dashboard-items">${items}</ul>
           ${order.notes ? `<p class="customer-notes"><strong>Note:</strong> ${esc(order.notes)}</p>` : ""}
           <div class="dashboard-order-total"><span>${collected ? "Collected" : "Collect at pickup"}</span><strong>${money(order.totalCents)}</strong></div>
-          <button class="btn small ${collected ? "alt" : "lime"} order-toggle" data-id="${esc(order.id)}" data-status="${collected ? "pending" : "collected"}">
+          <button class="btn small ${collected ? "alt" : "blue"} order-toggle" data-id="${esc(order.id)}" data-status="${collected ? "pending" : "collected"}">
             ${collected ? "Reopen order" : "Mark picked up & paid"}
           </button>
         </li>`;

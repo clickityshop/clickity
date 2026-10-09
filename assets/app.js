@@ -53,23 +53,26 @@
 
   // ---------- Product grid ----------
   function renderGrid() {
-    $("grid").innerHTML = PRODUCTS.map((p) => `
+    $("grid").innerHTML = PRODUCTS.map((p) => {
+      const color = p.colors[Math.floor(Math.random() * p.colors.length)];
+      return `
       <article class="card" data-id="${esc(p.id)}">
-        <div class="pic">${picture(p, p.colors[0])}</div>
+        <div class="pic">${picture(p, color)}</div>
         <div class="body">
           <h3>${esc(p.name)} <span class="price">${money(p.price)}</span></h3>
           <p>${esc(p.blurb)}</p>
           <div class="fields">
             <label>Color
-              <select class="color">${p.colors.map((c) => `<option>${esc(c)}</option>`).join("")}</select>
+              <select class="color">${p.colors.map((c) => `<option${c === color ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>
             </label>
             <label>Qty
               <input class="qty-in" type="number" min="1" max="${CFG.maxPerItem}" value="1" inputmode="numeric">
             </label>
           </div>
-          ${p.soldOut ? `<span class="soldout">Sold out — check back soon</span>` : `<button class="btn lime add">Add to cart</button>`}
+          ${p.soldOut ? `<span class="soldout">Sold out — check back soon</span>` : `<button class="btn blue add">Add to cart</button>`}
         </div>
-      </article>`).join("");
+      </article>`;
+    }).join("");
   }
 
   $("grid").addEventListener("click", (e) => {
@@ -116,7 +119,7 @@
     $("drawerTitle").textContent = view === "checkout" ? "Send your order" : "Your cart";
     const body = $("drawerBody");
     if (!cart.length) {
-      body.innerHTML = `<div class="empty"><p>Your cart is empty.</p><button class="btn lime" id="keepShopping">Browse fidgets</button></div>`;
+      body.innerHTML = `<div class="empty"><p>Your cart is empty.</p><button class="btn blue" id="keepShopping">Browse fidgets</button></div>`;
       $("keepShopping").onclick = closeCart;
       return;
     }
@@ -226,7 +229,7 @@
           <div class="big" aria-hidden="true">📦</div>
           <h3>Thanks, ${esc(fd.get("name"))}!</h3>
           <p>Order <strong><code>${esc(result.order.reference)}</code></strong> is ready for Clickity. Bring <strong>${money(result.order.totalCents / 100)}</strong> in cash at pickup.</p>
-          <button class="btn lime" id="doneBtn">Back to the shop</button>
+          <button class="btn blue" id="doneBtn">Back to the shop</button>
         </div>`;
       $("doneBtn").onclick = closeCart;
     } catch (ex) {
