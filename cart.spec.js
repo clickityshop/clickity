@@ -56,6 +56,36 @@ test('product cards start with varied random colors that match their illustratio
   await expect(page.locator('#drawerBody')).toContainText(colors[0]);
 });
 
+test('shows each new published commit once with its changes and favicon', async ({ page }) => {
+  const commitSha = 'a'.repeat(40);
+  await page.route('https://api.github.com/repos/clickityshop/clickity/commits/main', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      sha: commitSha,
+      commit: { message: 'Update shop colors\n\nUse a red, blue, black, and white palette.' },
+      files: [
+        { filename: 'assets/styles.css', additions: 12, deletions: 4 },
+        { filename: 'products.js', additions: 8, deletions: 8 },
+      ],
+    }),
+  }));
+
+  await page.goto('/');
+  const dialog = page.locator('#releaseDialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('#releaseCommitTitle')).toHaveText('Update shop colors');
+  await expect(dialog.locator('#releaseCommitMessage')).toHaveText('Use a red, blue, black, and white palette.');
+  await expect(dialog.locator('#releaseFiles')).toContainText('assets/styles.css');
+  await expect(dialog.locator('#releaseFilesSummary')).toHaveText('2 files changed · +20 / −12 lines');
+  await expect(dialog.locator('img')).toHaveAttribute('src', 'assets/favicon.svg');
+  await expect(dialog.locator('#releaseCommitLink')).toHaveAttribute('href', `https://github.com/clickityshop/clickity/commit/${commitSha}`);
+
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.reload();
+  await expect(dialog).not.toBeVisible();
+});
+
 test('privacy policy explains order data use and limits liability clearly', async ({ page }) => {
   await page.goto('/privacy.html');
   await expect(page.getByRole('heading', { name: 'Privacy policy' })).toBeVisible();

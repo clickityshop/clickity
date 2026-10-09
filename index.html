@@ -59,6 +59,19 @@
     <div class="scroll" id="drawerBody"></div>
   </aside>
 
+  <dialog class="release-dialog" id="releaseDialog" aria-labelledby="releaseHeading">
+    <div class="release-dialog-head">
+      <img src="assets/favicon.svg" alt="" width="48" height="48">
+      <button class="btn small alt" id="dismissRelease" type="button">Close</button>
+    </div>
+    <h2 id="releaseHeading">What’s new</h2>
+    <p class="release-commit-title" id="releaseCommitTitle"></p>
+    <p class="release-commit-message" id="releaseCommitMessage"></p>
+    <p class="release-files-summary" id="releaseFilesSummary"></p>
+    <ul class="release-files" id="releaseFiles"></ul>
+    <a class="btn blue" id="releaseCommitLink" target="_blank" rel="noopener">View commit</a>
+  </dialog>
+
   <script src="config.js"></script>
   <script src="products.js"></script>
   <script src="assets/art.js"></script>

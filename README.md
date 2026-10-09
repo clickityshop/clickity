@@ -9,6 +9,8 @@ A storefront for 3D-printed fidgets. The shop stays on GitHub Pages; a small Clo
 
 The order service stores a customer's name, email, preferred pickup time and place, optional note, items, and total. It does not collect online payment.
 
+The shop checks the latest commit on the `main` branch and shows its commit message and changed files in a popup the first time a visitor opens the shop after that commit. Dismissing the popup is remembered in that browser until a newer commit is published. This requires access to the GitHub API.
+
 ## Set up online orders
 
 The order API needs its own Cloudflare account; GitHub Pages cannot store orders or run the private dashboard API.

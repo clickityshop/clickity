@@ -3,6 +3,7 @@
   const PRODUCTS = window.CLICKITY_PRODUCTS;
   const Art = window.ClickityArt;
   const CART_KEY = "clickity-cart";
+  const RELEASE_KEY = "clickity-last-seen-commit";
   const $ = (id) => document.getElementById(id);
 
   const money = (n) => CFG.currency + n.toFixed(2).replace(/\.00$/, "");
@@ -11,6 +12,82 @@
 
   function picture(p, color) {
     return p.photo ? `<img src="${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy">` : Art.svg(p.shape, color);
+  }
+
+  function checkForReleaseNotes() {
+    const dialog = $("releaseDialog");
+    if (!dialog) return;
+
+    const rememberDismissal = () => {
+      if (!dialog.dataset.commitSha) return;
+      try {
+        localStorage.setItem(RELEASE_KEY, dialog.dataset.commitSha);
+      } catch (error) {
+        console.warn("Could not save the last-seen update.", error);
+      }
+    };
+    dialog.addEventListener("cancel", rememberDismissal);
+    $("dismissRelease").addEventListener("click", () => {
+      rememberDismissal();
+      dialog.close();
+    });
+
+    fetch("https://api.github.com/repos/clickityshop/clickity/commits/main", {
+      headers: { Accept: "application/vnd.github+json" },
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`GitHub returned ${response.status}.`);
+        return response.json();
+      })
+      .then((commit) => {
+        if (typeof commit.sha !== "string" || !/^[a-f0-9]{40}$/i.test(commit.sha)) {
+          throw new Error("GitHub returned an invalid commit ID.");
+        }
+
+        let lastSeenCommit = "";
+        try {
+          lastSeenCommit = localStorage.getItem(RELEASE_KEY) || "";
+        } catch (error) {
+          console.warn("Could not read the last-seen update.", error);
+        }
+        if (lastSeenCommit === commit.sha) return;
+
+        const message = commit.commit?.message;
+        if (typeof message !== "string" || !message.trim()) {
+          throw new Error("The latest commit has no description.");
+        }
+
+        const title = message.trim().split("\n", 1)[0];
+        const body = message.trim().slice(title.length).trim();
+        $("releaseCommitTitle").textContent = title;
+        $("releaseCommitMessage").textContent = body;
+
+        const files = Array.isArray(commit.files) ? commit.files : [];
+        const added = files.reduce((sum, file) => sum + (Number(file.additions) || 0), 0);
+        const removed = files.reduce((sum, file) => sum + (Number(file.deletions) || 0), 0);
+        $("releaseFilesSummary").textContent = files.length
+          ? `${files.length} file${files.length === 1 ? "" : "s"} changed · +${added} / −${removed} lines`
+          : "See the commit for its changed files.";
+
+        const list = $("releaseFiles");
+        files.slice(0, 8).forEach((file) => {
+          const item = document.createElement("li");
+          item.textContent = file.filename;
+          list.append(item);
+        });
+        if (files.length > 8) {
+          const item = document.createElement("li");
+          item.textContent = `and ${files.length - 8} more`;
+          list.append(item);
+        }
+
+        dialog.dataset.commitSha = commit.sha;
+        $("releaseCommitLink").href = `https://github.com/clickityshop/clickity/commit/${commit.sha}`;
+        dialog.showModal();
+      })
+      .catch((error) => {
+        console.warn("Could not load the latest site update.", error);
+      });
   }
 
   // ---------- Cart state (survives page reloads) ----------
@@ -250,4 +327,5 @@
   }
   renderGrid();
   renderCount();
+  checkForReleaseNotes();
 })();
