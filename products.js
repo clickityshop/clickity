@@ -10,7 +10,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Folds over and over forever. Silent enough for class.",
     price: 5,
     shape: "cube",
-    colors: ["Galaxy Purple", "Lime", "Ocean Blue"],
+    colors: ["Black", "White", "Red"],
   },
   {
     id: "flexi-dragon",
@@ -18,7 +18,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Fully articulated, printed in one piece. Wiggles like it's alive.",
     price: 8,
     shape: "dragon",
-    colors: ["Silk Rainbow", "Glow-in-the-Dark", "Red"],
+    colors: ["Black", "White", "Red"],
   },
   {
     id: "clicker-key",
@@ -26,7 +26,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "That satisfying click — clips to your backpack.",
     price: 3,
     shape: "clicker",
-    colors: ["Orange", "Teal", "Black"],
+    colors: ["Black", "White", "Red"],
   },
   {
     id: "two-key-clicker",
@@ -34,7 +34,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Two real clicky keyboard switches. Mash away — it's the best sound.",
     price: 6,
     shape: "keys",
-    colors: ["Black", "White", "Galaxy Purple", "Ocean Blue"],
+    colors: ["Black", "White", "Red"],
   },
   {
     id: "sliding-ball",
@@ -42,7 +42,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "A ball that glides back and forth in a track. Smooth and calming.",
     price: 4,
     shape: "slider",
-    colors: ["Teal", "Orange", "Lime", "Pastel Pink"],
+    colors: ["Black", "White", "Red"],
   },
   {
     id: "gear-spinner",
@@ -50,7 +50,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Three interlocking gears. Spin one, they all go.",
     price: 6,
     shape: "gear",
-    colors: ["Silver", "Gold", "Neon Green"],
+    colors: ["Black", "White", "Red"],
   },
   {
     id: "fidget-slug",
@@ -58,7 +58,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Segmented, squishy-feeling, and weirdly cute.",
     price: 4,
     shape: "slug",
-    colors: ["Pastel Pink", "Mint", "Lemon"],
+    colors: ["Black", "White", "Red"],
   },
   {
     id: "push-pop",
@@ -66,7 +66,7 @@ const CLICKITY_PRODUCTS = [
     blurb: "Click-in buttons on a pocket-sized coin.",
     price: 3,
     shape: "pop",
-    colors: ["Sunset", "Sky", "White"],
+    colors: ["Black", "White", "Red"],
   },
 ];
 
