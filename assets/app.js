@@ -167,7 +167,7 @@
           <textarea name="notes" rows="2" placeholder="Anything we should know?"></textarea></label>
         <label class="terms-accept">
           <input name="acceptedTerms" type="checkbox" required>
-          I agree to the <a href="privacy.html#terms" target="_blank" rel="noopener">site and order terms</a>.
+          I agree to the <a href="terms.html" target="_blank" rel="noopener">site and order terms</a>.
         </label>
         <input class="hp" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
         <p class="note">${esc(CFG.orderApiUrl
