@@ -241,11 +241,9 @@ body.cart-open .drawer { transform: none; }
 .release-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .release-dialog-head img { display: block; border-radius: 12px; }
 .release-dialog h2 { margin: 20px 0 8px; font-size: 1.8rem; }
-.release-commit-title { margin: 0; font-size: 1.15rem; font-weight: 800; }
-.release-commit-message { margin: 8px 0; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.release-highlights { margin: 12px 0 20px; padding-left: 22px; }
+.release-highlights li + li { margin-top: 8px; }
 .release-files-summary { margin: 16px 0 6px; font-weight: 700; }
-.release-files { max-height: 180px; margin: 0 0 20px; padding-left: 22px; overflow-y: auto; overflow-wrap: anywhere; }
-.release-files li + li { margin-top: 4px; }
 
 form.order { display: grid; gap: 12px; }
 form.order label { display: grid; gap: 4px; font-weight: 600; font-size: 0.95rem; }
