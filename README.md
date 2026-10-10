@@ -9,7 +9,7 @@ A storefront for 3D-printed fidgets. The shop stays on GitHub Pages; a small Clo
 
 The order service stores a customer's name, email, preferred pickup time and place, optional note, items, and total. It does not collect online payment.
 
-Every site page checks the latest commit on the `main` branch and shows a brief summary of the changes in a welcome popup the first time a visitor opens any page after that commit. It does not show the commit message. Dismissing the popup is remembered across pages in that browser until a newer commit is published. This requires access to the GitHub API.
+Every site page checks the latest commit on the `main` branch and shows a plain-language summary of visible changes in a welcome popup the first time a visitor opens any page after that commit. It does not show the commit message or link visitors to commit details. Dismissing the popup is remembered across pages in that browser until a newer commit is published. This requires access to the GitHub API.
 
 ## Set up online orders
 

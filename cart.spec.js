@@ -65,7 +65,9 @@ test('shows a new published commit across pages once with its changes and favico
       sha: commitSha,
       commit: { message: 'This commit message must not be shown to visitors.' },
       files: [
-        { filename: 'assets/styles.css', additions: 12, deletions: 4, patch: '+--blue: #1e88e5;' },
+        { filename: 'assets/styles.css', additions: 12, deletions: 4, patch: '+--paper: #fff8ec;\n+--lime: #9be22d;\n+--orange: #ff8a1f;' },
+        { filename: 'assets/favicon.svg', additions: 1, deletions: 1, patch: '+fill="#ff8a1f"' },
+        { filename: 'booth.html', additions: 2, deletions: 2, patch: '+class="btn lime"\n+background: var(--lime)' },
         { filename: 'products.js', additions: 8, deletions: 8, patch: '+colors: ["Red", "Blue", "Black", "White"]' },
       ],
     }),
@@ -75,12 +77,14 @@ test('shows a new published commit across pages once with its changes and favico
   const dialog = page.locator('#releaseDialog');
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('#releaseHeading')).toHaveText("Welcome! Here's what changed");
-  await expect(dialog.locator('#releaseHighlights')).toContainText("Updated the site's colors and visual styling.");
+  await expect(dialog.locator('#releaseHighlights')).toContainText('The shop is back to its warm tan background, with green highlights, orange buttons, and purple accents.');
+  await expect(dialog.locator('#releaseHighlights')).toContainText('The Clickity favicon is back to its original orange design.');
+  await expect(dialog.locator('#releaseHighlights')).toContainText('The sales booth now matches the green-and-orange shop theme.');
   await expect(dialog.locator('#releaseHighlights')).toContainText('Updated product color options; each product still gets a random color when the shop opens.');
   await expect(dialog).not.toContainText('This commit message must not be shown to visitors.');
-  await expect(dialog.locator('#releaseFilesSummary')).toHaveText('2 files changed · +20 / −12 lines');
+  await expect(dialog.locator('#releaseFilesSummary')).toHaveText("Here are the latest changes you'll notice:");
+  await expect(dialog.locator('#releaseCommitLink')).toHaveCount(0);
   await expect(dialog.locator('img')).toHaveAttribute('src', 'assets/favicon.svg');
-  await expect(dialog.locator('#releaseCommitLink')).toHaveAttribute('href', `https://github.com/clickityshop/clickity/commit/${commitSha}`);
 
   await page.getByRole('button', { name: 'Close' }).click();
   await page.goto('/');

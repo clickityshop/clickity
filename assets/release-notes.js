@@ -29,15 +29,9 @@
   const summary = document.createElement("p");
   summary.id = "releaseFilesSummary";
   summary.className = "release-files-summary";
+  summary.textContent = "Here are the latest changes you'll notice:";
 
-  const commitLink = document.createElement("a");
-  commitLink.id = "releaseCommitLink";
-  commitLink.className = "btn blue";
-  commitLink.target = "_blank";
-  commitLink.rel = "noopener";
-  commitLink.textContent = "See details";
-
-  dialog.append(header, heading, highlights, summary, commitLink);
+  dialog.append(header, heading, summary, highlights);
   document.body.append(dialog);
 
   function summarizeChanges(files) {
@@ -54,9 +48,13 @@
       } else if (path === "assets/art.js") {
         changes.add("Updated the product illustrations.");
       } else if (path === "assets/styles.css") {
-        changes.add("Updated the site's colors and visual styling.");
+        changes.add(/--paper:\s*#fff8ec/i.test(patch) && /--lime:\s*#9be22d/i.test(patch)
+          ? "The shop is back to its warm tan background, with green highlights, orange buttons, and purple accents."
+          : "Updated the site's colors and visual styling.");
       } else if (path === "assets/favicon.svg") {
-        changes.add("Updated the site favicon.");
+        changes.add(/#ff8a1f/i.test(patch)
+          ? "The Clickity favicon is back to its original orange design."
+          : "Updated the site favicon.");
       } else if (path === "assets/release-notes.js") {
         changes.add("Updated the welcome popup with a summary of site changes.");
       } else if (path === "assets/app.js") {
@@ -64,7 +62,9 @@
       } else if (path === "assets/orders.js" || path === "orders.html") {
         changes.add("Updated the owner orders dashboard.");
       } else if (path === "assets/booth.js" || path === "booth.html") {
-        changes.add("Updated the in-person sales booth.");
+        changes.add(/btn lime|var\(--lime\)/i.test(patch)
+          ? "The sales booth now matches the green-and-orange shop theme."
+          : "Updated the in-person sales booth.");
       } else if (path.endsWith(".md")) {
         changes.add("Updated project documentation.");
       } else if (path.endsWith(".html")) {
@@ -123,20 +123,13 @@
       if (lastSeenCommit === commit.sha) return;
 
       const files = Array.isArray(commit.files) ? commit.files : [];
-      const added = files.reduce((total, file) => total + (Number(file.additions) || 0), 0);
-      const removed = files.reduce((total, file) => total + (Number(file.deletions) || 0), 0);
-      summary.textContent = files.length
-        ? `${files.length} file${files.length === 1 ? "" : "s"} changed · +${added} / −${removed} lines`
-        : "Site changes are ready.";
-
       summarizeChanges(files).forEach((change) => {
         const item = document.createElement("li");
         item.textContent = change;
         highlights.append(item);
       });
-
       dialog.dataset.commitSha = commit.sha;
-      commitLink.href = `https://github.com/clickityshop/clickity/commit/${commit.sha}`;
+      dialog.dataset.commitSha = commit.sha;
       dialog.showModal();
     })
     .catch((error) => {
