@@ -18,11 +18,9 @@
   let cart = [];
   try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { cart = []; }
   cart = cart.filter((l) => byId(l.id));
-  let pendingSubmissionId = crypto.randomUUID();
 
   function save() {
     try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {}
-    pendingSubmissionId = crypto.randomUUID();
     renderCount();
   }
 
@@ -173,17 +171,47 @@
           I agree to the <a href="terms.html" target="_blank" rel="noopener">site and order terms</a>.
         </label>
         <input class="hp" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <p class="note">${esc(CFG.orderApiUrl
-          ? `${CFG.pickupNote} Your name, email, pickup time and place, and any note are shared with Clickity to prepare your order.`
-          : "Online orders are not connected yet. Please check back soon.")}</p>
+        <p class="note">${esc(CFG.pickupNote + " Clicking Place order opens a Gmail draft addressed to Clickity. Review it and click Send to place your order.")}</p>
         <p class="error" id="formError" role="alert"></p>
-        <button class="btn" type="submit" id="submitOrder" style="justify-content:center" ${CFG.orderApiUrl ? "" : "disabled"}>Place order (${money(total())})</button>
+        <button class="btn" type="submit" id="submitOrder" style="justify-content:center">Place order (${money(total())})</button>
       </form>`;
     $("backToCart").onclick = () => { view = "cart"; renderCart(); };
     $("orderForm").addEventListener("submit", submitOrder);
   }
 
-  async function submitOrder(e) {
+  function orderEmailUrl(formData, orderItems, orderTotal) {
+    const pickupTime = formData.get("pickupTime") === "before-school" ? "Before school" : "After school";
+    const itemDetails = orderItems.map(({ id, color, qty }) => {
+      const product = byId(id);
+      const lineTotal = product.price * qty;
+      return `- ${product.name} (${color}) - Qty: ${qty} x ${money(product.price)} = ${money(lineTotal)}`;
+    });
+    const body = [
+      "New Clickity order",
+      "",
+      `Name: ${formData.get("name")}`,
+      `Email: ${formData.get("email")}`,
+      `Pickup time: ${pickupTime}`,
+      `Pickup place: ${formData.get("pickupLocation")}`,
+      "",
+      "Items:",
+      ...itemDetails,
+      "",
+      `Total due at pickup: ${money(orderTotal)}`,
+      "Payment: Cash at pickup",
+      `Notes: ${formData.get("notes") || "None"}`,
+    ].join("\n");
+    const params = new URLSearchParams({
+      view: "cm",
+      fs: "1",
+      to: CFG.contactEmail || "clickityshop.com@gmail.com",
+      su: "clickity order",
+      body,
+    });
+    return `https://mail.google.com/mail/?${params}`;
+  }
+
+  function submitOrder(e) {
     e.preventDefault();
     const form = e.target;
     const err = $("formError");
@@ -196,39 +224,22 @@
 
     const fd = new FormData(form);
     const orderTotal = total();
-
     const btn = $("submitOrder");
     btn.disabled = true;
-    btn.textContent = "Placing order…";
+    btn.textContent = "Opening Gmail…";
     err.textContent = "";
 
     try {
-      if (!CFG.orderApiUrl) throw new Error("Orders are not connected yet. Please contact Clickity before submitting.");
-      const response = await fetch(`${CFG.orderApiUrl.replace(/\/+$/, "")}/api/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          submissionId: pendingSubmissionId,
-          name: fd.get("name"),
-          email: fd.get("email"),
-          pickupTime: fd.get("pickupTime"),
-          pickupLocation: fd.get("pickupLocation"),
-          acceptedTerms: fd.get("acceptedTerms") === "on",
-          notes: fd.get("notes") || "",
-          expectedTotalCents: Math.round(orderTotal * 100),
-          items: cart.map(({ id, color, qty }) => ({ id, color, qty })),
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Your order could not be placed. Please try again.");
-      cart = [];
-      save();
-      $("drawerTitle").textContent = "Order received";
+      const composeWindow = window.open("about:blank", "_blank");
+      if (!composeWindow) throw new Error("Please allow pop-ups for Clickity so your Gmail order draft can open.");
+      composeWindow.opener = null;
+      composeWindow.location.replace(orderEmailUrl(fd, cart, orderTotal));
+      $("drawerTitle").textContent = "Gmail draft ready";
       $("drawerBody").innerHTML = `
         <div class="done">
-          <div class="big" aria-hidden="true">📦</div>
-          <h3>Thanks, ${esc(fd.get("name"))}!</h3>
-          <p>Order <strong><code>${esc(result.order.reference)}</code></strong> is ready for Clickity. Bring <strong>${money(result.order.totalCents / 100)}</strong> in cash at pickup.</p>
+          <div class="big" aria-hidden="true">✉️</div>
+          <h3>Your order email is ready</h3>
+          <p>Review the details in Gmail and click <strong>Send</strong> to place your order. Bring <strong>${money(orderTotal)}</strong> in cash at pickup.</p>
           <button class="btn blue" id="doneBtn">Back to the shop</button>
         </div>`;
       $("doneBtn").onclick = closeCart;

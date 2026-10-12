@@ -60,7 +60,9 @@
       } else if (path === "assets/app.js") {
         changes.add("Updated the shop and checkout experience.");
       } else if (path === "assets/orders.js" || path === "orders.html") {
-        changes.add("Updated the owner orders dashboard.");
+        changes.add(file.status === "removed"
+          ? "Removed the owner orders dashboard; orders are now sent by email."
+          : "Updated the owner orders dashboard.");
       } else if (path === "assets/booth.js" || path === "booth.html") {
         changes.add(/btn lime|var\(--lime\)/i.test(patch)
           ? "The sales booth now matches the green-and-orange shop theme."
