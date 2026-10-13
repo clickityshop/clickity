@@ -5,7 +5,7 @@
   }
 
   const seasonalIcons = [
-    { start: "10-26", end: "10-31", href: "assets/halloween-favicon.svg" },
+    { start: "10-01", end: "10-31", href: "assets/halloween-favicon.svg" },
   ];
 
   function updateFavicon() {

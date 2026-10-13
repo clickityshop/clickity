@@ -4,12 +4,13 @@ async function disableReleaseCheck(page) {
   await page.route('https://api.github.com/repos/clickityshop/clickity/commits/main', (route) => route.abort());
 }
 
-test('shows the Halloween favicon from October 26 through Halloween only', async ({ browser }) => {
+test('shows the Halloween favicon throughout October only', async ({ browser }) => {
   const cases = [
-    { date: new Date(2026, 9, 25, 12), path: '/', favicon: 'assets/favicon.svg' },
-    { date: new Date(2026, 9, 26, 12), path: '/', favicon: 'assets/halloween-favicon.svg' },
+    { date: new Date(2026, 8, 30, 12), path: '/', favicon: 'assets/favicon.svg' },
+    { date: new Date(2026, 9, 1, 12), path: '/', favicon: 'assets/halloween-favicon.svg' },
+    { date: new Date(2026, 9, 15, 12), path: '/terms.html', favicon: 'assets/halloween-favicon.svg' },
     { date: new Date(2026, 9, 31, 12), path: '/privacy.html', favicon: 'assets/halloween-favicon.svg' },
-    { date: new Date(2026, 10, 1, 12), path: '/booth.html', favicon: 'assets/favicon.svg' },
+    { date: new Date(2026, 10, 1, 12), path: '/', favicon: 'assets/favicon.svg' },
   ];
 
   for (const { date, path, favicon } of cases) {
