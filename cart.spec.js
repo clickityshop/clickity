@@ -4,13 +4,23 @@ async function disableReleaseCheck(page) {
   await page.route('https://api.github.com/repos/clickityshop/clickity/commits/main', (route) => route.abort());
 }
 
-test('shows the Halloween favicon throughout October only', async ({ browser }) => {
+test('shows seasonal favicons throughout March, October, and December only', async ({ browser }) => {
   const cases = [
+    { date: new Date(2026, 1, 28, 12), path: '/', favicon: 'assets/favicon.svg' },
+    { date: new Date(2026, 2, 1, 12), path: '/', favicon: 'assets/st-patricks-favicon.png' },
+    { date: new Date(2026, 2, 17, 12), path: '/terms.html', favicon: 'assets/st-patricks-favicon.png' },
+    { date: new Date(2026, 2, 31, 12), path: '/privacy.html', favicon: 'assets/st-patricks-favicon.png' },
+    { date: new Date(2026, 3, 1, 12), path: '/', favicon: 'assets/favicon.svg' },
     { date: new Date(2026, 8, 30, 12), path: '/', favicon: 'assets/favicon.svg' },
     { date: new Date(2026, 9, 1, 12), path: '/', favicon: 'assets/halloween-favicon.svg' },
     { date: new Date(2026, 9, 15, 12), path: '/terms.html', favicon: 'assets/halloween-favicon.svg' },
     { date: new Date(2026, 9, 31, 12), path: '/privacy.html', favicon: 'assets/halloween-favicon.svg' },
     { date: new Date(2026, 10, 1, 12), path: '/', favicon: 'assets/favicon.svg' },
+    { date: new Date(2026, 10, 30, 12), path: '/', favicon: 'assets/favicon.svg' },
+    { date: new Date(2026, 11, 1, 12), path: '/', favicon: 'assets/christmas-favicon.png' },
+    { date: new Date(2026, 11, 15, 12), path: '/terms.html', favicon: 'assets/christmas-favicon.png' },
+    { date: new Date(2026, 11, 31, 12), path: '/privacy.html', favicon: 'assets/christmas-favicon.png' },
+    { date: new Date(2027, 0, 1, 12), path: '/', favicon: 'assets/favicon.svg' },
   ];
 
   for (const { date, path, favicon } of cases) {
@@ -18,6 +28,17 @@ test('shows the Halloween favicon throughout October only', async ({ browser }) 
     await page.clock.install({ time: date });
     await page.goto(path);
     await expect(page.locator('link[rel~="icon"]')).toHaveAttribute('href', favicon);
+    await expect(page.locator('link[rel~="icon"]')).toHaveAttribute(
+      'type',
+      favicon.endsWith('.png') ? 'image/png' : 'image/svg+xml',
+    );
+    const logoDot = page.locator('.logo .dot');
+    if (favicon === 'assets/favicon.svg') {
+      await expect(logoDot).toHaveCSS('background-image', 'none');
+    } else {
+      await expect(logoDot).toHaveCSS('background-image', new RegExp(favicon.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    }
+    await expect(logoDot).toHaveCSS('border-radius', '50%');
     await page.close();
   }
 
@@ -28,6 +49,22 @@ test('shows the Halloween favicon throughout October only', async ({ browser }) 
   await midnightPage.clock.fastForward(2000);
   await expect(midnightPage.locator('link[rel~="icon"]')).toHaveAttribute('href', 'assets/favicon.svg');
   await midnightPage.close();
+
+  const christmasMidnightPage = await browser.newPage();
+  await christmasMidnightPage.clock.install({ time: new Date(2026, 11, 31, 23, 59, 59) });
+  await christmasMidnightPage.goto('/');
+  await expect(christmasMidnightPage.locator('link[rel~="icon"]')).toHaveAttribute('href', 'assets/christmas-favicon.png');
+  await christmasMidnightPage.clock.fastForward(2000);
+  await expect(christmasMidnightPage.locator('link[rel~="icon"]')).toHaveAttribute('href', 'assets/favicon.svg');
+  await christmasMidnightPage.close();
+
+  const stPatricksMidnightPage = await browser.newPage();
+  await stPatricksMidnightPage.clock.install({ time: new Date(2026, 2, 31, 23, 59, 59) });
+  await stPatricksMidnightPage.goto('/');
+  await expect(stPatricksMidnightPage.locator('link[rel~="icon"]')).toHaveAttribute('href', 'assets/st-patricks-favicon.png');
+  await stPatricksMidnightPage.clock.fastForward(2000);
+  await expect(stPatricksMidnightPage.locator('link[rel~="icon"]')).toHaveAttribute('href', 'assets/favicon.svg');
+  await stPatricksMidnightPage.close();
 });
 
 test('cart adds products without exposing order details on the public shop', async ({ page }) => {
