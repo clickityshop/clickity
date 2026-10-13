@@ -12,7 +12,9 @@ Every site page checks the latest commit on the `main` branch and shows a plain-
 
 ## Products
 
-Edit `products.js` to add or change products, prices, colors, and model shapes. The shop randomly picks one available color for each product whenever the page opens; customers can change it before adding the item to their cart. Put photos in `photos/` and set `photo: "photos/whatever.jpg"`. Products without a photo are rendered as Three.js model images; colored SVG drawings remain visible if 3D rendering is unavailable.
+Edit `products.js` to add or change products, prices, colors, and model shapes. The shop randomly picks one available color for each product whenever the page opens; customers can change it before adding the item to their cart. Put photos in `photos/` and set `photo: "photos/whatever.jpg"`. Products without a photo use colored 2D SVG illustrations.
+
+The calendar-based favicon schedule is in `assets/favicon.js`. The Halloween icon appears October 26–31, then switches back to the normal icon; add future seasonal icons and date windows to `seasonalIcons`.
 
 ## Hosting (GitHub Pages)
 

@@ -1,4 +1,4 @@
-// SVG fallbacks for products without a photo; Three.js replaces these with rendered model images.
+// SVG illustrations for products without a photo.
 (function () {
   const swatch = {
     red: "#ef3b36", blue: "#1e88e5", black: "#111111", white: "#ffffff",

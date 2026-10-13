@@ -4,6 +4,31 @@ async function disableReleaseCheck(page) {
   await page.route('https://api.github.com/repos/clickityshop/clickity/commits/main', (route) => route.abort());
 }
 
+test('shows the Halloween favicon from October 26 through Halloween only', async ({ browser }) => {
+  const cases = [
+    { date: new Date(2026, 9, 25, 12), path: '/', favicon: 'assets/favicon.svg' },
+    { date: new Date(2026, 9, 26, 12), path: '/', favicon: 'assets/halloween-favicon.svg' },
+    { date: new Date(2026, 9, 31, 12), path: '/privacy.html', favicon: 'assets/halloween-favicon.svg' },
+    { date: new Date(2026, 10, 1, 12), path: '/booth.html', favicon: 'assets/favicon.svg' },
+  ];
+
+  for (const { date, path, favicon } of cases) {
+    const page = await browser.newPage();
+    await page.clock.install({ time: date });
+    await page.goto(path);
+    await expect(page.locator('link[rel~="icon"]')).toHaveAttribute('href', favicon);
+    await page.close();
+  }
+
+  const midnightPage = await browser.newPage();
+  await midnightPage.clock.install({ time: new Date(2026, 9, 31, 23, 59, 59) });
+  await midnightPage.goto('/');
+  await expect(midnightPage.locator('link[rel~="icon"]')).toHaveAttribute('href', 'assets/halloween-favicon.svg');
+  await midnightPage.clock.fastForward(2000);
+  await expect(midnightPage.locator('link[rel~="icon"]')).toHaveAttribute('href', 'assets/favicon.svg');
+  await midnightPage.close();
+});
+
 test('cart adds products without exposing order details on the public shop', async ({ page }) => {
   await disableReleaseCheck(page);
   await page.goto('/');
@@ -69,6 +94,8 @@ test('product cards start with varied random colors that match their illustratio
   await page.goto('/');
 
   const cards = page.locator('.card');
+  await expect(cards.locator('.pic svg')).toHaveCount(8);
+  await expect(cards.locator('.pic canvas')).toHaveCount(0);
   const products = await cards.evaluateAll((elements) => elements.map((card) => ({
     color: card.querySelector('.color').value,
     fill: (() => {
