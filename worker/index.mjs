@@ -101,6 +101,52 @@ function serializeOrder(row) {
   };
 }
 
+class OrderEmailError extends Error {
+  constructor(message, status = 502) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function sendOrderEmail(row, env) {
+  if (!env.ORDER_MAILER_URL || !env.ORDER_MAILER_TOKEN) {
+    throw new OrderEmailError("Automatic order email is not configured.", 503);
+  }
+
+  const payload = {
+    token: env.ORDER_MAILER_TOKEN,
+    submissionId: row.submission_id,
+    reference: row.reference,
+    name: row.customer_name,
+    email: row.customer_email,
+    pickupTime: row.pickup_time,
+    pickupLocation: row.pickup_location,
+    notes: row.notes,
+    items: JSON.parse(row.items_json),
+    totalCents: row.total_cents,
+  };
+  const fetcher = env.FETCH || fetch;
+  const result = await fetcher(env.ORDER_MAILER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    redirect: "manual",
+  });
+  const location = result.headers.get("Location") || "";
+  if (result.status === 302 && location.startsWith("https://script.googleusercontent.com/")) return;
+  if (!result.ok) throw new OrderEmailError("The order email could not be sent.");
+  const responseBody = await result.json();
+  if (responseBody?.ok !== true) throw new OrderEmailError("The order email service did not confirm delivery.");
+}
+
+async function deliverOrderEmail(env, row) {
+  if (row.email_sent_at) return;
+  await sendOrderEmail(row, env);
+  const sentAt = new Date().toISOString();
+  await env.DB.prepare("UPDATE orders SET email_sent_at = ? WHERE id = ?")
+    .bind(sentAt, row.id).run();
+}
+
 async function createOrder(request, env, origin) {
   if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("application/json")) {
     return response({ error: "Send the order as JSON." }, 415, origin);
@@ -125,10 +171,13 @@ async function createOrder(request, env, origin) {
     return response({ error: "Please check your details and agree to the site and order terms." }, 400, origin);
   }
   const existing = await env.DB.prepare(`
-    SELECT id, reference, created_at, customer_name, customer_email, homeroom, pickup_time, pickup_location, notes, items_json, total_cents, status
+    SELECT id, submission_id, reference, created_at, customer_name, customer_email, homeroom, pickup_time, pickup_location, notes, items_json, total_cents, status, email_sent_at
     FROM orders WHERE submission_id = ? LIMIT 1
   `).bind(submissionId).first();
-  if (existing) return response({ order: serializeOrder(existing) }, 200, origin);
+  if (existing) {
+    await deliverOrderEmail(env, existing);
+    return response({ order: serializeOrder(existing) }, 200, origin);
+  }
   if (!Number.isInteger(body.expectedTotalCents) || body.expectedTotalCents < 0) {
     return response({ error: "The cart total is invalid. Please refresh and try again." }, 400, origin);
   }
@@ -166,10 +215,11 @@ async function createOrder(request, env, origin) {
     VALUES (?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?, ?, 'pending')
   `).bind(id, submissionId, reference, createdAt, name, email, pickupTime, pickupLocation, notes, JSON.stringify(items), totalCents).run();
   const row = await env.DB.prepare(`
-    SELECT id, reference, created_at, customer_name, customer_email, homeroom, pickup_time, pickup_location, notes, items_json, total_cents, status
+    SELECT id, submission_id, reference, created_at, customer_name, customer_email, homeroom, pickup_time, pickup_location, notes, items_json, total_cents, status, email_sent_at
     FROM orders WHERE submission_id = ? LIMIT 1
   `).bind(submissionId).first();
   if (!row) throw new Error("Order insert did not return a saved order.");
+  await deliverOrderEmail(env, row);
   return response({ order: serializeOrder(row) }, 201, origin);
 }
 
@@ -213,6 +263,9 @@ export default {
       return response({ error: "Not found." }, 404, origin);
     } catch (error) {
       console.error("Order API request failed:", error);
+      if (error instanceof OrderEmailError) {
+        return response({ error: error.message }, error.status, origin);
+      }
       return response({ error: "The order service could not complete this request. Please try again." }, 500, origin);
     }
   },

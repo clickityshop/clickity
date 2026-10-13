@@ -1,5 +1,4 @@
-// Placeholder illustrations for products without a photo.
-// Each returns an SVG string drawn in the given color.
+// SVG fallbacks for products without a photo; Three.js replaces these with rendered model images.
 (function () {
   const swatch = {
     red: "#ef3b36", blue: "#1e88e5", black: "#111111", white: "#ffffff",
@@ -77,7 +76,7 @@
     colorFor,
     svg(shape, colorName) {
       const draw = shapes[shape] || shapes.pop;
-      return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${draw(colorFor(colorName))}</svg>`;
+      return `<svg viewBox="0 0 200 200" data-shape="${shape}" data-color="${colorFor(colorName)}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${draw(colorFor(colorName))}</svg>`;
     },
   };
 })();

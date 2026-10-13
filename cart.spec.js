@@ -18,6 +18,47 @@ test('cart adds products without exposing order details on the public shop', asy
   await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', 'privacy.html');
 });
 
+test('cart is cleared only after the order is successfully placed', async ({ page }) => {
+  await disableReleaseCheck(page);
+  await page.route('**/config.js', (route) => route.fulfill({
+    contentType: 'text/javascript',
+    body: `window.CLICKITY_CONFIG = {
+      contactEmail: "clickityshop.com@gmail.com",
+      currency: "$",
+      maxPerItem: 10,
+      orderApiUrl: "/api/orders",
+      pickupNote: "Pay with cash when you pick up your order at school.",
+    };`,
+  }));
+  await page.route('**/api/orders', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ order: { reference: 'CK-123' } }),
+  }));
+
+  await page.goto('/');
+  await page.locator('.add').first().click();
+  await page.locator('#openCart').click();
+  await page.getByRole('button', { name: /Checkout/ }).click();
+  await expect(page.locator('#drawerBody')).toContainText('1 item · $5');
+  await expect(page.locator('#cartCount')).toHaveText('1');
+
+  await page.locator('[name="name"]').fill('Sam');
+  await page.locator('[name="email"]').fill('sam@example.com');
+  await page.locator('[name="pickupTime"]').selectOption('before-school');
+  await page.locator('[name="pickupLocation"]').fill('by the front office');
+  await page.locator('[name="acceptedTerms"]').check();
+  await page.getByRole('button', { name: /Place order/ }).click();
+
+  await expect(page.locator('#drawerTitle')).toHaveText('Order sent');
+  await expect(page.locator('#drawerBody')).toContainText('CK-123');
+  await expect(page.locator('#cartCount')).toHaveText('0');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('clickity-cart'))).toBe('[]');
+
+  await page.locator('#closeCart').click();
+  await page.locator('#openCart').click();
+  await expect(page.locator('#drawerBody')).toContainText('Your cart is empty.');
+});
+
 test('product cards start with varied random colors that match their illustrations', async ({ page }) => {
   await page.addInitScript(() => {
     const values = [0, 0.26, 0.51, 0.76];

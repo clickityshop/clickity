@@ -24,6 +24,7 @@ body {
 }
 
 a { color: inherit; }
+svg[hidden] { display: none !important; }
 
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
 
@@ -108,6 +109,7 @@ header.top .wrap {
   position: absolute; width: 52%; background: var(--card); border: var(--line);
   border-radius: var(--radius); box-shadow: var(--press); padding: 8px;
 }
+.hero-art .tile svg, .hero-art .tile img { display: block; width: 100%; height: auto; }
 .hero-art .tile:nth-child(1) { top: 0; left: 4%; transform: rotate(-8deg); }
 .hero-art .tile:nth-child(2) { top: 18%; right: 0; transform: rotate(6deg); }
 .hero-art .tile:nth-child(3) { bottom: 0; left: 22%; transform: rotate(-2deg); }

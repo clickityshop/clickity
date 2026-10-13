@@ -171,7 +171,9 @@
           I agree to the <a href="terms.html" target="_blank" rel="noopener">site and order terms</a>.
         </label>
         <input class="hp" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <p class="note">${esc(CFG.pickupNote + " Clicking Place order opens a Gmail draft addressed to Clickity. Review it and click Send to place your order.")}</p>
+        <p class="note">${esc(CFG.pickupNote + (CFG.orderApiUrl
+          ? " Clicking Place order emails your order to Clickity automatically."
+          : " Clicking Place order opens a Gmail draft addressed to Clickity. Review it and click Send to place your order."))}</p>
         <p class="error" id="formError" role="alert"></p>
         <button class="btn" type="submit" id="submitOrder" style="justify-content:center">Place order (${money(total())})</button>
       </form>`;
@@ -211,6 +213,8 @@
     return `https://mail.google.com/mail/?${params}`;
   }
 
+  let pendingSubmissionId = null;
+
   function submitOrder(e) {
     e.preventDefault();
     const form = e.target;
@@ -224,6 +228,11 @@
 
     const fd = new FormData(form);
     const orderTotal = total();
+    if (CFG.orderApiUrl) {
+      sendOrder(fd, orderTotal);
+      return;
+    }
+
     const btn = $("submitOrder");
     btn.disabled = true;
     btn.textContent = "Opening Gmail…";
@@ -245,6 +254,52 @@
       $("doneBtn").onclick = closeCart;
     } catch (ex) {
       err.textContent = ex.message || "Your order could not be placed. Please try again.";
+      btn.disabled = false;
+      btn.textContent = `Place order (${money(orderTotal)})`;
+    }
+  }
+
+  async function sendOrder(formData, orderTotal) {
+    const btn = $("submitOrder");
+    const err = $("formError");
+    btn.disabled = true;
+    btn.textContent = "Sending order…";
+    err.textContent = "";
+    pendingSubmissionId ||= crypto.randomUUID();
+
+    try {
+      const response = await fetch(CFG.orderApiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          submissionId: pendingSubmissionId,
+          name: formData.get("name"),
+          email: formData.get("email"),
+          pickupTime: formData.get("pickupTime"),
+          pickupLocation: formData.get("pickupLocation"),
+          acceptedTerms: formData.get("acceptedTerms") === "on",
+          notes: formData.get("notes") || "",
+          expectedTotalCents: Math.round(orderTotal * 100),
+          items: cart.map(({ id, color, qty }) => ({ id, color, qty })),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Your order could not be sent. Please try again.");
+
+      pendingSubmissionId = null;
+      cart = [];
+      save();
+      $("drawerTitle").textContent = "Order sent";
+      $("drawerBody").innerHTML = `
+        <div class="done">
+          <div class="big" aria-hidden="true">✉️</div>
+          <h3>Your order is on its way!</h3>
+          <p>Clickity has received your order${result.order?.reference ? ` <strong>${esc(result.order.reference)}</strong>` : ""}. Bring <strong>${money(orderTotal)}</strong> in cash at pickup.</p>
+          <button class="btn blue" id="doneBtn">Back to the shop</button>
+        </div>`;
+      $("doneBtn").onclick = closeCart;
+    } catch (ex) {
+      err.textContent = ex.message || "Your order could not be sent. Please try again.";
       btn.disabled = false;
       btn.textContent = `Place order (${money(orderTotal)})`;
     }

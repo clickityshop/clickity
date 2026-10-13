@@ -12,7 +12,7 @@ Every site page checks the latest commit on the `main` branch and shows a plain-
 
 ## Products
 
-Edit `products.js` to add or change products, prices, and colors. The shop randomly picks one available color for each product whenever the page opens; customers can change it before adding the item to their cart. Put photos in `photos/` and set `photo: "photos/whatever.jpg"`. Products without a photo use a colored placeholder drawing.
+Edit `products.js` to add or change products, prices, colors, and model shapes. The shop randomly picks one available color for each product whenever the page opens; customers can change it before adding the item to their cart. Put photos in `photos/` and set `photo: "photos/whatever.jpg"`. Products without a photo are rendered as Three.js model images; colored SVG drawings remain visible if 3D rendering is unavailable.
 
 ## Hosting (GitHub Pages)
 

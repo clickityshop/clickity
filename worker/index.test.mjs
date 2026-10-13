@@ -4,11 +4,21 @@ import worker from "./index.mjs";
 
 const origin = "https://shop.example";
 const password = "a-test-dashboard-password-that-is-long-enough";
-const env = () => ({
-  DB: new MemoryDatabase(),
-  DASHBOARD_PASSWORD: password,
-  SHOP_ORIGINS: `${origin},http://localhost:8000`,
-});
+const env = () => {
+  const bindings = {
+    DB: new MemoryDatabase(),
+    DASHBOARD_PASSWORD: password,
+    SHOP_ORIGINS: `${origin},http://localhost:8000`,
+    ORDER_MAILER_URL: "https://script.example/exec",
+    ORDER_MAILER_TOKEN: "test-mailer-token",
+    sentEmails: [],
+  };
+  bindings.FETCH = async (url, options) => {
+    bindings.sentEmails.push({ url, ...JSON.parse(options.body) });
+    return Response.json({ ok: true });
+  };
+  return bindings;
+};
 
 class MemoryDatabase {
   orders = [];
@@ -50,8 +60,14 @@ class MemoryStatement {
         items_json: itemsJson,
         total_cents: totalCents,
         status: "pending",
+        email_sent_at: null,
       });
       return { meta: { changes: 1 } };
+    }
+    if (this.sql.startsWith("UPDATE orders SET email_sent_at")) {
+      const order = this.database.orders.find((entry) => entry.id === this.values[1]);
+      if (order) order.email_sent_at = this.values[0];
+      return { meta: { changes: order ? 1 : 0 } };
     }
     if (this.sql.startsWith("UPDATE orders SET status")) {
       const order = this.database.orders.find((entry) => entry.id === this.values[1]);
@@ -139,6 +155,57 @@ test("stores an order with server-calculated prices and deduplicates retries", a
   assert.equal(retry.status, 200);
   assert.equal((await retry.json()).order.id, saved.order.id);
   assert.equal(bindings.DB.orders.length, 1);
+  assert.equal(bindings.sentEmails.length, 1);
+  assert.equal(bindings.sentEmails[0].token, "test-mailer-token");
+  assert.equal(bindings.sentEmails[0].items[0].unitPriceCents, 500);
+  assert.ok(bindings.DB.orders[0].email_sent_at);
+});
+
+test("keeps an unsent order retryable when the mail service fails", async () => {
+  const bindings = env();
+  bindings.FETCH = async () => new Response("Unavailable", { status: 503 });
+  const order = {
+    submissionId: "66666666-6666-4666-8666-666666666666",
+    name: "Sam",
+    email: "sam@example.com",
+    pickupTime: "after-school",
+    pickupLocation: "by the front office",
+    acceptedTerms: true,
+    notes: "",
+    expectedTotalCents: 500,
+    items: [{ id: "infinity-cube", color: "Red", qty: 1 }],
+  };
+
+  const failed = await worker.fetch(request("/api/orders", { method: "POST", body: order }), bindings);
+  assert.equal(failed.status, 502);
+  assert.equal(bindings.DB.orders.length, 1);
+  assert.equal(bindings.DB.orders[0].email_sent_at, null);
+
+  bindings.FETCH = async () => Response.json({ ok: true });
+  const retried = await worker.fetch(request("/api/orders", { method: "POST", body: order }), bindings);
+  assert.equal(retried.status, 200);
+  assert.ok(bindings.DB.orders[0].email_sent_at);
+});
+
+test("reports missing mailer configuration rather than claiming an order was sent", async () => {
+  const bindings = env();
+  bindings.ORDER_MAILER_URL = "";
+  const response = await worker.fetch(request("/api/orders", {
+    method: "POST",
+    body: {
+      submissionId: "77777777-7777-4777-8777-777777777777",
+      name: "Sam",
+      email: "sam@example.com",
+      pickupTime: "after-school",
+      pickupLocation: "by the front office",
+      acceptedTerms: true,
+      notes: "",
+      expectedTotalCents: 500,
+      items: [{ id: "infinity-cube", color: "Red", qty: 1 }],
+    },
+  }), bindings);
+  assert.equal(response.status, 503);
+  assert.match((await response.json()).error, /not configured/);
 });
 
 test("rejects unknown products, invalid colors, and over-limit quantities", async () => {

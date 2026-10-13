@@ -6,6 +6,10 @@ window.CLICKITY_CONFIG = {
   currency: "$",
   maxPerItem: 10,
 
+  // Set to the Cloudflare Worker order endpoint to send orders automatically.
+  // Leave blank to keep opening Gmail drafts.
+  orderApiUrl: "",
+
   // Shown at checkout.
   pickupNote: "Pay with cash when you pick up your order at school. No money is collected online.",
 };
