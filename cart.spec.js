@@ -200,16 +200,21 @@ test('privacy policy explains order data use and limits liability clearly', asyn
   await expect(page.locator('main')).toContainText('not liable');
 });
 
-test('checkout opens a prefilled Gmail draft without sending or storing the order', async ({ page }) => {
+test('checkout submits a named order form directly to FormSubmit', async ({ page }) => {
   await disableReleaseCheck(page);
-  await page.context().route('https://mail.google.com/**', (route) => route.fulfill({
-    status: 200,
-    contentType: 'text/html',
-    body: '<!doctype html><title>Gmail compose test</title>',
-  }));
-  let apiRequests = 0;
-  page.on('request', (request) => {
-    if (request.url().includes('/api/orders')) apiRequests += 1;
+  let submittedOrder;
+  await page.route('https://formsubmit.co/**', async (route) => {
+    const request = route.request();
+    submittedOrder = {
+      url: request.url(),
+      method: request.method(),
+      body: new URLSearchParams(request.postData()),
+    };
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/html',
+      body: '<!doctype html><title>Submitted</title>',
+    });
   });
   await page.goto('/');
   const selectedColor = await page.locator('.card').first().locator('.color').inputValue();
@@ -222,23 +227,24 @@ test('checkout opens a prefilled Gmail draft without sending or storing the orde
   await page.locator('[name="pickupLocation"]').fill('by the front office');
   await page.locator('[name="notes"]').fill('Please bring the blue one');
   await page.locator('[name="acceptedTerms"]').check();
-  const popupPromise = page.waitForEvent('popup');
+  await expect(page.locator('#orderForm')).toHaveAttribute(
+    'action',
+    'https://formsubmit.co/clickityshop.com@gmail.com',
+  );
+  await expect(page.locator('#orderForm')).toHaveAttribute('method', 'POST');
   await page.getByRole('button', { name: /Place order/ }).click();
-  const popup = await popupPromise;
-  await popup.waitForURL(/mail\.google\.com\/mail\/\?/);
-  const composeUrl = new URL(popup.url());
-  expect(composeUrl.searchParams.get('to')).toBe('clickityshop.com@gmail.com');
-  expect(composeUrl.searchParams.get('su')).toBe('clickity order');
-  expect(composeUrl.searchParams.get('body')).toContain('Name: Sam');
-  expect(composeUrl.searchParams.get('body')).toContain('Email: sam@example.com');
-  expect(composeUrl.searchParams.get('body')).toContain('Pickup time: Before school');
-  expect(composeUrl.searchParams.get('body')).toContain('Pickup place: by the front office');
-  expect(composeUrl.searchParams.get('body')).toContain(`Infinity Cube (${selectedColor}) - Qty: 1 x $5 = $5`);
-  expect(composeUrl.searchParams.get('body')).toContain('Total due at pickup: $5');
-  expect(composeUrl.searchParams.get('body')).toContain('Notes: Please bring the blue one');
-
-  await expect(page.locator('#drawerTitle')).toHaveText('Gmail draft ready');
-  await expect(page.locator('#drawerBody')).toContainText('click Send');
-  await expect(page.locator('#cartCount')).toHaveText('1');
-  expect(apiRequests).toBe(0);
+  await page.waitForURL('https://formsubmit.co/**');
+  expect(submittedOrder.url).toBe('https://formsubmit.co/clickityshop.com@gmail.com');
+  expect(submittedOrder.method).toBe('POST');
+  expect(submittedOrder.body.get('name')).toBe('Sam');
+  expect(submittedOrder.body.get('email')).toBe('sam@example.com');
+  expect(submittedOrder.body.get('pickupTime')).toBe('before-school');
+  expect(submittedOrder.body.get('pickupLocation')).toBe('by the front office');
+  expect(submittedOrder.body.get('Items')).toContain(`1 × Infinity Cube (${selectedColor})`);
+  expect(submittedOrder.body.get('Total due at pickup')).toBe('$5');
+  expect(submittedOrder.body.get('Notes')).toBe('Please bring the blue one');
+  expect(submittedOrder.body.get('_replyto')).toBe('sam@example.com');
+  expect(submittedOrder.body.get('_cc')).toBe('wesley.eifler@franklinsabers.org');
+  expect(submittedOrder.body.get('_template')).toBe('table');
+  expect(submittedOrder.body.get('acceptedTerms')).toBe('on');
 });

@@ -132,6 +132,7 @@
         body: JSON.stringify({
           _subject: `Clickity booth summary ${new Date().toLocaleDateString()} — ${money(total)}`,
           _template: "table",
+          _cc: CFG.orderEmailCc,
           Date: new Date().toLocaleDateString(),
           Sales: today.length,
           "Cash collected": money(total),

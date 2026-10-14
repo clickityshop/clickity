@@ -151,7 +151,7 @@
   function renderCheckout(body) {
     body.innerHTML = `
       <p><strong>${itemCount()} item${itemCount() === 1 ? "" : "s"}</strong> · ${money(total())} <button class="btn small alt" id="backToCart" style="margin-left:8px">Edit cart</button></p>
-      <form class="order" id="orderForm">
+      <form class="order" id="orderForm" method="POST" action="https://formsubmit.co/${esc(CFG.orderEmail || "")}">
         <label>Your name <input name="name" required autocomplete="name"></label>
         <label>Email <input name="email" type="email" required autocomplete="email"></label>
         <label>When should we meet?
@@ -173,7 +173,7 @@
         <input class="hp" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
         <p class="note">${esc(CFG.pickupNote + (CFG.orderApiUrl
           ? " Clicking Place order emails your order to Clickity automatically."
-          : " Clicking Place order opens a Gmail draft addressed to Clickity. Review it and click Send to place your order."))}</p>
+          : " Clicking Place order submits your order to Clickity by email."))}</p>
         <p class="error" id="formError" role="alert"></p>
         <button class="btn" type="submit" id="submitOrder" style="justify-content:center">Place order (${money(total())})</button>
       </form>`;
@@ -181,82 +181,65 @@
     $("orderForm").addEventListener("submit", submitOrder);
   }
 
-  function orderEmailUrl(formData, orderItems, orderTotal) {
+  function formSubmitFields(formData, orderItems, orderTotal) {
     const pickupTime = formData.get("pickupTime") === "before-school" ? "Before school" : "After school";
     const itemDetails = orderItems.map(({ id, color, qty }) => {
       const product = byId(id);
       const lineTotal = product.price * qty;
-      return `- ${product.name} (${color}) - Qty: ${qty} x ${money(product.price)} = ${money(lineTotal)}`;
+      return `${qty} × ${product.name} (${color}) — ${money(product.price)} each; ${money(lineTotal)}`;
     });
-    const body = [
-      "New Clickity order",
-      "",
-      `Name: ${formData.get("name")}`,
-      `Email: ${formData.get("email")}`,
-      `Pickup time: ${pickupTime}`,
-      `Pickup place: ${formData.get("pickupLocation")}`,
-      "",
-      "Items:",
-      ...itemDetails,
-      "",
-      `Total due at pickup: ${money(orderTotal)}`,
-      "Payment: Cash at pickup",
-      `Notes: ${formData.get("notes") || "None"}`,
-    ].join("\n");
-    const params = new URLSearchParams({
-      view: "cm",
-      fs: "1",
-      to: CFG.contactEmail || "clickityshop.com@gmail.com",
-      su: "clickity order",
-      body,
-    });
-    return `https://mail.google.com/mail/?${params}`;
+    return {
+      _subject: "New Clickity order",
+      _template: "table",
+      _replyto: formData.get("email"),
+      _cc: CFG.orderEmailCc,
+      Items: itemDetails.join("\n"),
+      "Total due at pickup": money(orderTotal),
+      Payment: "Cash at pickup",
+      Notes: formData.get("notes") || "None",
+    };
   }
 
   let pendingSubmissionId = null;
 
   function submitOrder(e) {
-    e.preventDefault();
     const form = e.target;
     const err = $("formError");
     if (!form.checkValidity()) {
+      e.preventDefault();
       err.textContent = "Please fill in your name, a valid email, and your pickup time and place.";
       form.reportValidity();
       return;
     }
-    if (form._honey.value) return; // bot
+    if (form._honey.value) {
+      e.preventDefault();
+      return;
+    }
 
     const fd = new FormData(form);
     const orderTotal = total();
     if (CFG.orderApiUrl) {
+      e.preventDefault();
       sendOrder(fd, orderTotal);
+      return;
+    }
+    if (!CFG.orderEmail) {
+      e.preventDefault();
+      err.textContent = "Online ordering is not configured yet. Please contact the shop owner.";
       return;
     }
 
     const btn = $("submitOrder");
     btn.disabled = true;
-    btn.textContent = "Opening Gmail…";
+    btn.textContent = "Submitting order…";
     err.textContent = "";
-
-    try {
-      const composeWindow = window.open("about:blank", "_blank");
-      if (!composeWindow) throw new Error("Please allow pop-ups for Clickity so your Gmail order draft can open.");
-      composeWindow.opener = null;
-      composeWindow.location.replace(orderEmailUrl(fd, cart, orderTotal));
-      $("drawerTitle").textContent = "Gmail draft ready";
-      $("drawerBody").innerHTML = `
-        <div class="done">
-          <div class="big" aria-hidden="true">✉️</div>
-          <h3>Your order email is ready</h3>
-          <p>Review the details in Gmail and click <strong>Send</strong> to place your order. Bring <strong>${money(orderTotal)}</strong> in cash at pickup.</p>
-          <button class="btn blue" id="doneBtn">Back to the shop</button>
-        </div>`;
-      $("doneBtn").onclick = closeCart;
-    } catch (ex) {
-      err.textContent = ex.message || "Your order could not be placed. Please try again.";
-      btn.disabled = false;
-      btn.textContent = `Place order (${money(orderTotal)})`;
-    }
+    Object.entries(formSubmitFields(fd, cart, orderTotal)).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.append(input);
+    });
   }
 
   async function sendOrder(formData, orderTotal) {
@@ -287,22 +270,26 @@
       if (!response.ok) throw new Error(result.error || "Your order could not be sent. Please try again.");
 
       pendingSubmissionId = null;
-      cart = [];
-      save();
-      $("drawerTitle").textContent = "Order sent";
-      $("drawerBody").innerHTML = `
-        <div class="done">
-          <div class="big" aria-hidden="true">✉️</div>
-          <h3>Your order is on its way!</h3>
-          <p>Clickity has received your order${result.order?.reference ? ` <strong>${esc(result.order.reference)}</strong>` : ""}. Bring <strong>${money(orderTotal)}</strong> in cash at pickup.</p>
-          <button class="btn blue" id="doneBtn">Back to the shop</button>
-        </div>`;
-      $("doneBtn").onclick = closeCart;
+      completeOrder(orderTotal, result.order?.reference);
     } catch (ex) {
       err.textContent = ex.message || "Your order could not be sent. Please try again.";
       btn.disabled = false;
       btn.textContent = `Place order (${money(orderTotal)})`;
     }
+  }
+
+  function completeOrder(orderTotal, reference = "") {
+    cart = [];
+    save();
+    $("drawerTitle").textContent = "Order sent";
+    $("drawerBody").innerHTML = `
+      <div class="done">
+        <div class="big" aria-hidden="true">✉️</div>
+        <h3>Your order is on its way!</h3>
+        <p>Clickity has received your order${reference ? ` <strong>${esc(reference)}</strong>` : ""}. Bring <strong>${money(orderTotal)}</strong> in cash at pickup.</p>
+        <button class="btn blue" id="doneBtn">Back to the shop</button>
+      </div>`;
+    $("doneBtn").onclick = closeCart;
   }
 
   // ---------- Init ----------
